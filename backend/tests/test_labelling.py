@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -8,58 +6,7 @@ from sqlalchemy.orm import Session
 
 from goldsmith.core.labelling import build_instructions, label_schema
 from goldsmith.models import Correction, Label, Row, User
-from goldsmith.worker.runner import run_next
-from tests.fake_provider import FakeProvider
-from tests.helpers import ingest, new_project
-
-KEYWORDS = {
-    "billing": r"charg|refund|invoice|bill|pay|price|card|tax|receipt|discount|vat|quote|renew",
-    "shipping": r"order|ship|deliver|parcel|package|courier|track|customs|box|driver|pick up",
-    "account": r"log|account|password|email|username|sign|team|profile|authenticat",
-}
-
-
-def row_of(user: str) -> str:
-    return re.search(r"## Row to label\n```\n(.*?)\n```", user, re.S).group(1)
-
-
-def fake_label(user: str, temperature: float | None) -> dict:
-    text = row_of(user).lower()
-    label = next((k for k, pat in KEYWORDS.items() if re.search(pat, text)), "bug")
-    if temperature and "?" in text:
-        label = "bug" if label != "bug" else "account"  # questions make the samples disagree
-    return {
-        "expected_output": label,
-        "rationale": f"Mentions {label} topics.",
-        "rules_applied": ["r1"],
-        "rule_concerns": ["r1"] if "refund" in text else [],
-        "confidence": 0.5 if "?" in text else 0.9,
-    }
-
-
-@pytest.fixture
-def labelled_project(client: TestClient, fake_llm: FakeProvider) -> str:
-    """100 tickets, rules saved, 10 seeds labelled from the reference column."""
-    fake_llm.responses["LabelOutput"] = fake_label
-    pid, _ = ingest(client, "tickets_100.csv", task_type="classification")
-    client.put(
-        f"/api/projects/{pid}/rules",
-        json={"rules": [{"text": "Refund requests are billing.", "kind": "criterion"}]},
-    )
-    for seed in client.post(f"/api/projects/{pid}/seeds/select").json():
-        row = seed["row"]
-        client.post(
-            f"/api/projects/{pid}/seeds/{row['id']}",
-            json={"expected_output": row["reference_output"]},
-        )
-    return pid
-
-
-def run_label_job(client: TestClient, pid: str, cheap: bool = False) -> dict:
-    res = client.post(f"/api/projects/{pid}/label", json={"cheap": cheap})
-    assert res.status_code == 202, res.text
-    assert run_next()
-    return client.get(f"/api/jobs/{res.json()['id']}").json()
+from tests.helpers import fake_label, ingest, new_project, row_of, run_label_job
 
 
 def test_label_schema_restricts_classification_labels():

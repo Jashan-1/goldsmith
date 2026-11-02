@@ -135,3 +135,30 @@ class LabelStats(BaseModel):
 
 
 RowOut.model_rebuild()
+
+
+class ReviewCard(BaseModel):
+    row: RowOut | None  # None when the queue is empty
+    counts: dict[str, int]
+
+
+class ReviewIn(BaseModel):
+    action: Literal["approve", "reject", "edit", "instruction"]
+    expected_output: str | None = Field(default=None, max_length=20000)
+    instruction: str | None = Field(default=None, max_length=2000)
+    seconds_spent: int = Field(default=0, ge=0)
+    apply_to_similar: bool = False
+
+
+class ReviewOut(BaseModel):
+    label: LabelInfo
+    similar_job: JobOut | None = None
+
+
+class InstructIn(BaseModel):
+    instruction: str = Field(min_length=1, max_length=2000)
+
+
+class InstructOut(BaseModel):
+    expected_output: str
+    rationale: str

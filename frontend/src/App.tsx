@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router'
 import { api, ApiError, type User } from './api/client'
 import DataStep from './pages/project/DataStep'
 import LabelStep from './pages/project/LabelStep'
+import ReviewStep from './pages/project/ReviewStep'
 import RulesStep from './pages/project/RulesStep'
 import SeedsStep from './pages/project/SeedsStep'
 import ProjectPage from './pages/ProjectPage'
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="rules" element={<RulesStep />} />
             <Route path="seeds" element={<SeedsStep />} />
             <Route path="label" element={<LabelStep />} />
+            <Route path="review" element={<ReviewStep />} />
           </Route>
           <Route path="*" element={<ProjectsPage />} />
         </Routes>

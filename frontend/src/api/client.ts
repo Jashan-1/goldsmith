@@ -116,3 +116,13 @@ export interface LabelStats {
   uncertainties: number[]
   threshold: number
 }
+
+export interface ReviewCard {
+  row: Row | null
+  counts: Record<string, number>
+}
+
+export interface ReviewResult {
+  label: LabelInfo
+  similar_job: Job | null
+}

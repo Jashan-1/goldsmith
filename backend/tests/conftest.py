@@ -22,6 +22,7 @@ from goldsmith.llm.provider import set_provider  # noqa: E402
 from goldsmith.main import create_app  # noqa: E402
 from goldsmith.models import User  # noqa: E402
 from tests.fake_provider import FakeProvider  # noqa: E402
+from tests.helpers import fake_label, ingest  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -73,3 +74,21 @@ def client_as(db: Session) -> Callable[[User], TestClient]:
 @pytest.fixture
 def client(client_as: Callable[[User], TestClient], make_user: Callable[[str], User]) -> TestClient:
     return client_as(make_user("a@example.com"))
+
+
+@pytest.fixture
+def labelled_project(client: TestClient, fake_llm: FakeProvider) -> str:
+    """100 tickets, rules saved, 10 seeds labelled from the reference column."""
+    fake_llm.responses["LabelOutput"] = fake_label
+    pid, _ = ingest(client, "tickets_100.csv", task_type="classification")
+    client.put(
+        f"/api/projects/{pid}/rules",
+        json={"rules": [{"text": "Refund requests are billing.", "kind": "criterion"}]},
+    )
+    for seed in client.post(f"/api/projects/{pid}/seeds/select").json():
+        row = seed["row"]
+        client.post(
+            f"/api/projects/{pid}/seeds/{row['id']}",
+            json={"expected_output": row["reference_output"]},
+        )
+    return pid

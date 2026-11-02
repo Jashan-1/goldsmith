@@ -118,12 +118,52 @@ def similar_corrections(db: Session, project_id: uuid.UUID, vector: Any, k: int 
     return "\n".join(lines)
 
 
-def user_message(row: Row, corrections: str) -> str:
+def user_message(
+    row: Row, corrections: str, instruction: str | None = None, current: Any = None
+) -> str:
     parts = []
     if corrections:
         parts.append(f"## Past reviewer corrections on similar rows\n{corrections}")
     parts.append(f"## Row to label\n```\n{row_text(row.input)}\n```")
+    if current is not None:
+        parts.append(f"## Current label\n{current}")
+    if instruction:
+        parts.append(f"## Reviewer instruction (follow it)\n{instruction}")
     return "\n\n".join(parts)
+
+
+@dataclass
+class LabelContext:
+    instructions: str
+    schema: type[LabelOutput]
+    rule_set_version: int
+    is_classification: bool
+
+
+def labelling_context(db: Session, project: Project) -> LabelContext:
+    """The prompt and output schema shared by every row in a project."""
+    seeds = db.execute(
+        select(Row, Label.expected_output)
+        .join(Label, Label.row_id == Row.id)
+        .where(Row.project_id == project.id, Label.is_current, Label.source == "human_seed")
+        .order_by(Row.cluster_id, Row.row_index)
+    ).all()
+    if not seeds:
+        raise LabellingError("Label at least one seed first.")
+    rule_set = current_rule_set(db, project.id)
+    is_classification = project.task_type == "classification"
+    labels = sorted({str(out) for _, out in seeds}) if is_classification else []
+    return LabelContext(
+        instructions=build_instructions(
+            project.task_type,
+            rule_set.rules if rule_set else [],
+            [(r, o) for r, o in seeds],
+            labels,
+        ),
+        schema=label_schema(labels or None),
+        rule_set_version=rule_set.version if rule_set else 0,
+        is_classification=is_classification,
+    )
 
 
 def _label_one(
@@ -180,27 +220,17 @@ def rows_to_label(db: Session, project_id: uuid.UUID, row_ids: list[str] | None)
 def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> None:
     project = db.get_one(Project, job.project_id)
     samples = 1 if job.payload.get("cheap") else max(1, settings.label_samples)
-
-    seeds = db.execute(
-        select(Row, Label.expected_output)
-        .join(Label, Label.row_id == Row.id)
-        .where(Row.project_id == project.id, Label.is_current, Label.source == "human_seed")
-        .order_by(Row.cluster_id, Row.row_index)
-    ).all()
-    if not seeds:
-        raise LabellingError("Label at least one seed first.")
-    rule_set = current_rule_set(db, project.id)
-    rules = rule_set.rules if rule_set else []
-    is_classification = project.task_type == "classification"
-    labels = sorted({str(out) for _, out in seeds}) if is_classification else []
-    schema = label_schema(labels or None)
-    instructions = build_instructions(project.task_type, rules, [(r, o) for r, o in seeds], labels)
+    ctx = labelling_context(db, project)
 
     targets = rows_to_label(db, project.id, job.payload.get("row_ids"))
     if not targets:
         return
+    # "Apply to similar rows" passes the reviewer's instruction along.
+    instruction = job.payload.get("instruction")
     messages = {
-        row.id: user_message(row, similar_corrections(db, project.id, row.embedding))
+        row.id: user_message(
+            row, similar_corrections(db, project.id, row.embedding), instruction=instruction
+        )
         for row in targets
     }
 
@@ -212,11 +242,11 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
                 _label_one,
                 provider,
                 row,
-                instructions,
+                ctx.instructions,
                 messages[row.id],
-                schema,
+                ctx.schema,
                 samples,
-                is_classification,
+                ctx.is_classification,
             )
             for row in targets
         ]
@@ -254,7 +284,7 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
         db.add(
             Label(
                 row_id=result.row.id,
-                rule_set_version=rule_set.version if rule_set else 0,
+                rule_set_version=ctx.rule_set_version,
                 expected_output=first.expected_output,
                 rationale=first.rationale,
                 source="llm",
