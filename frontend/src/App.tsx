@@ -75,7 +75,7 @@ function Sidebar({ user }: { user: User }) {
         to="/"
         className="flex items-center gap-2 px-2 text-[15px] font-semibold tracking-[-0.03em]"
       >
-        <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-[#f5cd5b]">
+        <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-white">
           ✦
         </span>
         Goldsmith
@@ -104,7 +104,7 @@ function Sidebar({ user }: { user: User }) {
                 <Icon name={s.icon} className="text-muted" />
                 <span className="flex-1">{s.label}</span>
                 {s.to === 'review' && toReview > 0 && (
-                  <span className="grid min-w-5 place-items-center rounded-full bg-gold px-1.5 text-[11px] font-semibold text-white tabular-nums">
+                  <span className="grid min-w-5 place-items-center rounded-full bg-alert px-1.5 text-[11px] font-semibold text-white tabular-nums">
                     {toReview}
                   </span>
                 )}
@@ -115,7 +115,7 @@ function Sidebar({ user }: { user: User }) {
       )}
 
       <div className="mt-auto flex items-center gap-2.5 rounded-lg px-2 py-2">
-        <span className="grid size-7 place-items-center rounded-full bg-gold-soft text-[11px] font-semibold text-gold">
+        <span className="grid size-7 place-items-center rounded-full bg-hover text-[11px] font-semibold text-ink">
           {user.email.slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{user.email}</span>

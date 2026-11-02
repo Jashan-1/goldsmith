@@ -11,22 +11,24 @@
   --font-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
 
   --color-canvas: #fafaf9; /* page background */
-  --color-sunken: #f4f4f2; /* sidebar, list headers */
+  --color-sunken: #f4f4f3; /* inner panels, sidebar */
   --color-surface: #ffffff; /* cards, panes */
-  --color-hover: #eeeeeb;
-  --color-line: #e7e6e3; /* hairline borders */
-  --color-line-strong: #d6d5d1;
+  --color-hover: #efefed;
+  --color-line: #ebebe9; /* hairline borders */
+  --color-line-strong: #dcdcda;
   --color-ink: #0a0a0a;
-  --color-ink-soft: #3a3a38;
-  --color-muted: #75756f;
-  --color-faint: #a3a39c;
-  --color-gold: #b8860b;
-  --color-gold-soft: #fbf5e3;
-  --color-gold-line: #ecdcaa;
-  --color-ok: #2f7d4f;
-  --color-ok-soft: #eaf5ee;
-  --color-bad: #b42318;
-  --color-bad-soft: #fdecea;
+  --color-ink-soft: #2b2b2b;
+  --color-muted: #6f6f6c;
+  --color-faint: #a3a3a0;
+  /* "gold" is the attention accent; kept neutral to match the monochrome look. */
+  --color-gold: #0a0a0a;
+  --color-gold-soft: #f4f4f3;
+  --color-gold-line: #e6e6e3;
+  --color-alert: #e5484d;
+  --color-ok: #1f8a4c;
+  --color-ok-soft: #e9f6ee;
+  --color-bad: #d93036;
+  --color-bad-soft: #fdeceb;
 }
 
 @layer base {
@@ -53,10 +55,10 @@
 
 /* Tailwind v4: shared classes are @utility blocks (@apply can't reference plain classes). */
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-[10px] bg-ink px-3.5 py-2 text-[13px] font-medium whitespace-nowrap text-white transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] bg-ink px-4 py-2.5 text-[13px] font-medium whitespace-nowrap text-white transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-40;
 }
 @utility btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-[10px] border border-line bg-surface px-3.5 py-2 text-[13px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] border border-line bg-surface px-4 py-2.5 text-[13px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-40;
 }
 @utility btn-ghost {
   @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 py-2 text-[13px] font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-40;
@@ -65,7 +67,7 @@
   @apply rounded-[10px] border border-line bg-surface px-3 py-2 text-sm text-ink transition-shadow outline-none placeholder:text-faint focus:border-line-strong focus:ring-4 focus:ring-gold-soft;
 }
 @utility card {
-  @apply rounded-2xl border border-line bg-surface;
+  @apply rounded-[18px] border border-line bg-surface shadow-[0_1px_2px_rgba(10,10,10,0.03)];
 }
 @utility kicker {
   @apply inline-flex items-center gap-1 text-[13px] text-muted;

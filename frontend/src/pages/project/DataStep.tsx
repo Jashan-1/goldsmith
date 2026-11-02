@@ -33,10 +33,12 @@ export default function DataStep() {
       />
       <UploadPanel projectId={projectId} compact={hasRows} />
       {hasRows && (
-        <section className="grid grid-cols-3 overflow-hidden rounded-2xl border border-line bg-surface">
-          <Metric label="Rows" value={rows.data!.total} />
-          <Metric label="Near-duplicates" value={rows.data!.duplicates} border />
-          <Metric label="Clusters" value={rows.data!.clusters.length} border />
+        <section className="card p-4">
+          <div className="grid grid-cols-3 rounded-xl bg-sunken">
+            <Metric label="Rows" value={rows.data!.total} />
+            <Metric label="Near-duplicates" value={rows.data!.duplicates} border />
+            <Metric label="Clusters" value={rows.data!.clusters.length} border />
+          </div>
         </section>
       )}
       <RowsTable projectId={projectId} />

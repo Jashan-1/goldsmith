@@ -40,7 +40,7 @@ export default function ThresholdPanel({
 
   return (
     <section className="card overflow-hidden">
-      <div className="grid grid-cols-3 divide-x divide-line border-b border-line">
+      <div className="m-4 mb-0 grid grid-cols-3 divide-x divide-line rounded-xl bg-sunken">
         <Stat label="To review" value={toReview} tone="gold" />
         <Stat label="Auto-accepted" value={auto} />
         <Stat label="Seeds and approved" value={seeds} />
@@ -58,7 +58,7 @@ export default function ThresholdPanel({
             <div
               key={i}
               className={`flex-1 rounded-t-[3px] transition-colors ${
-                (i + 1) / BINS > threshold ? 'bg-gold/80' : 'bg-line-strong'
+                (i + 1) / BINS > threshold ? 'bg-ink' : 'bg-line-strong'
               }`}
               style={{ height: n ? `${Math.max(8, (100 * n) / peak)}%` : '2px' }}
               title={`${n} rows`}

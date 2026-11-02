@@ -17,7 +17,9 @@ export function PageHeader({
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
         {kicker && <p className="kicker">{kicker}</p>}
-        <h1 className="mt-1 text-[28px] leading-tight font-semibold tracking-[-0.03em]">{title}</h1>
+        <h1 className="mt-2 text-[34px] leading-[1.08] font-semibold tracking-[-0.045em]">
+          {title}
+        </h1>
         {description && (
           <p className="mt-2 text-[15px] leading-relaxed text-muted">{description}</p>
         )}
@@ -62,7 +64,7 @@ export function Badge({
 }) {
   const tones = {
     neutral: 'bg-sunken text-muted',
-    gold: 'bg-gold-soft text-gold',
+    gold: 'bg-sunken text-ink',
     ok: 'bg-ok-soft text-ok',
     bad: 'bg-bad-soft text-bad',
     dark: 'bg-ink text-white',
@@ -78,9 +80,9 @@ export function Badge({
 
 export function Stat({ label, value, tone }: { label: string; value: ReactNode; tone?: 'gold' }) {
   return (
-    <div className="px-5 py-4">
+    <div className="px-4 py-3">
       <div
-        className={`text-[26px] font-semibold tracking-[-0.03em] tabular-nums ${tone === 'gold' ? 'text-gold' : ''}`}
+        className={`text-[24px] font-semibold tracking-[-0.03em] tabular-nums ${tone === 'gold' ? 'text-ink' : ''}`}
       >
         {value}
       </div>

@@ -2,30 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { api, type Project, type TaskType } from '../api/client'
-import Icon, { type IconName } from '../components/Icon'
-import { EmptyState, ErrorText, Loading } from '../components/ui'
+import Icon from '../components/Icon'
+import { ErrorText, Loading } from '../components/ui'
 
-const TASKS: { value: TaskType; label: string; hint: string; icon: IconName }[] = [
-  { value: 'classification', label: 'Classification', hint: 'Pick one label per row', icon: 'tag' },
-  {
-    value: 'qa',
-    label: 'Question answering',
-    hint: 'Write the ideal answer',
-    icon: 'message-square',
-  },
-  { value: 'chat', label: 'Chat', hint: 'Write the next reply', icon: 'file-text' },
+const TASKS: { value: TaskType; label: string; hint: string }[] = [
+  { value: 'classification', label: 'Classification', hint: 'One label per row' },
+  { value: 'qa', label: 'Question answering', hint: 'The ideal answer' },
+  { value: 'chat', label: 'Chat', hint: 'The next reply' },
 ]
 const TASK_LABEL = Object.fromEntries(TASKS.map((t) => [t.value, t.label])) as Record<
   TaskType,
   string
 >
-
-const FLOW = [
-  ['01', 'Upload', 'CSV, JSONL, Q&A pairs or chat logs.'],
-  ['02', 'Label ~10 seeds', 'Goldsmith picks varied examples for you.'],
-  ['03', 'Review what matters', 'Only rows the model is unsure about.'],
-  ['04', 'Export, measured', 'With coverage and accuracy, not vibes.'],
-]
+const STEPS = ['Upload your data', 'Label ~10 seed examples', 'Review only uncertain rows']
 
 export default function ProjectsPage() {
   const queryClient = useQueryClient()
@@ -47,129 +36,111 @@ export default function ProjectsPage() {
   })
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10 md:px-10">
-      <section className="grid items-end gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-        <div>
-          <p className="kicker">Your evaluation workspace</p>
-          <h1 className="mt-2 text-[44px] leading-[1.02] font-semibold tracking-[-0.045em] md:text-[56px]">
-            Make every example count.
-          </h1>
-          <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-muted">
-            Turn raw conversations into a labelled dataset your agent can learn from, without losing
-            the human judgement behind it.
-          </p>
-        </div>
+    <div className="mx-auto max-w-6xl px-6 pt-16 pb-20 md:px-10">
+      <header className="text-center">
+        <h1 className="text-[44px] leading-[1.05] font-semibold tracking-[-0.045em] md:text-[52px]">
+          Make every example count
+        </h1>
+        <p className="mt-3 text-[16px] text-muted">
+          Label ten rows, review only the ones that matter, export a dataset you can trust.
+        </p>
+      </header>
 
+      <section className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Featured card: create */}
         <form
-          className="card p-5 shadow-[0_12px_40px_rgba(10,10,10,0.05)]"
+          className="flex flex-col rounded-[18px] bg-ink p-6 text-white"
           onSubmit={(e) => {
             e.preventDefault()
             if (name.trim()) create.mutate()
           }}
         >
-          <p className="text-[15px] font-semibold tracking-[-0.02em]">Start a new dataset</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[15px] font-semibold">New dataset</p>
+            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px]">Start here</span>
+          </div>
+          <p className="mt-1 text-[13px] text-white/60">Set up a workspace in a moment.</p>
           <label className="sr-only" htmlFor="project-name">
             Dataset name
           </label>
           <input
             id="project-name"
-            className="field mt-4 w-full"
+            className="mt-5 rounded-[10px] border border-white/10 bg-white/5 px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-white/40 focus:border-white/30"
             placeholder="e.g. Support ticket routing"
             value={name}
             maxLength={200}
             onChange={(e) => setName(e.target.value)}
           />
-          <fieldset className="mt-3 grid grid-cols-3 gap-2">
-            <legend className="sr-only">Task type</legend>
+          <div className="mt-3 grid grid-cols-3 divide-x divide-white/10 rounded-xl bg-white/5">
             {TASKS.map((t) => (
-              <label
+              <button
+                type="button"
                 key={t.value}
-                className={`cursor-pointer rounded-xl border p-2.5 transition-colors ${
-                  taskType === t.value
-                    ? 'border-ink bg-surface shadow-[0_0_0_1px_var(--color-ink)]'
-                    : 'border-line hover:border-line-strong'
+                onClick={() => setTaskType(t.value)}
+                className={`px-3 py-2.5 text-left transition-colors first:rounded-l-xl last:rounded-r-xl ${
+                  taskType === t.value ? 'bg-white/15' : 'hover:bg-white/10'
                 }`}
               >
-                <input
-                  type="radio"
-                  name="task"
-                  className="sr-only"
-                  checked={taskType === t.value}
-                  onChange={() => setTaskType(t.value)}
-                />
-                <Icon name={t.icon} className="text-muted" />
-                <span className="mt-2 block text-[12px] leading-tight font-medium">{t.label}</span>
-                <span className="mt-0.5 block text-[11px] leading-tight text-muted">{t.hint}</span>
-              </label>
+                <span className="block text-[12px] leading-tight font-medium">{t.label}</span>
+                <span className="mt-0.5 block text-[11px] leading-tight text-white/50">
+                  {t.hint}
+                </span>
+              </button>
             ))}
-          </fieldset>
-          <button className="btn-primary mt-4 w-full" disabled={!name.trim() || create.isPending}>
-            Create dataset
-            <Icon name="chevron-right" size={14} />
-          </button>
-          {create.error && (
-            <div className="mt-2">
-              <ErrorText>{create.error.message}</ErrorText>
-            </div>
-          )}
-        </form>
-      </section>
-
-      <section className="mt-12 grid overflow-hidden rounded-2xl border border-line bg-surface sm:grid-cols-2 lg:grid-cols-4">
-        {FLOW.map(([n, title, text], i) => (
-          <div
-            key={n}
-            className={`p-5 ${i > 0 ? 'border-t border-line sm:border-t-0 sm:border-l' : ''} ${
-              i === 2 ? 'sm:border-l-0 sm:border-t lg:border-t-0 lg:border-l' : ''
-            } ${i === 3 ? 'sm:border-t lg:border-t-0' : ''}`}
-          >
-            <p className="mono-label">{n}</p>
-            <p className="mt-6 text-[15px] font-semibold tracking-[-0.02em]">{title}</p>
-            <p className="mt-1 text-[13px] leading-relaxed text-muted">{text}</p>
           </div>
-        ))}
-      </section>
-
-      <section className="mt-14">
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-[20px] font-semibold tracking-[-0.03em]">Your datasets</h2>
-          <span className="text-[13px] text-muted">{projects.data?.length ?? 0} total</span>
-        </div>
-        {projects.isPending && <Loading />}
-        {projects.error && <ErrorText>{projects.error.message}</ErrorText>}
-        {projects.data?.length === 0 && (
-          <div className="card">
-            <EmptyState icon="layers" title="No datasets yet">
-              Create your first dataset above to start building a reliable evaluation set.
-            </EmptyState>
-          </div>
-        )}
-        {!!projects.data?.length && (
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.data.map((p) => (
-              <li key={p.id}>
-                <Link
-                  to={`/projects/${p.id}`}
-                  className="group card flex h-full min-h-36 flex-col p-5 transition-all hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[0_12px_30px_rgba(10,10,10,0.06)]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="mono-label">{TASK_LABEL[p.task_type]}</span>
-                    <span className="grid size-7 place-items-center rounded-full bg-sunken text-muted transition-colors group-hover:bg-ink group-hover:text-white">
-                      <Icon name="chevron-right" size={14} />
-                    </span>
-                  </div>
-                  <p className="mt-auto pt-6 text-[17px] font-semibold tracking-[-0.025em]">
-                    {p.name}
-                  </p>
-                  <p className="mt-1 text-[12px] text-muted">
-                    Created {new Date(p.created_at).toLocaleDateString()}
-                  </p>
-                </Link>
+          <ul className="mt-5 space-y-2 text-[13px] text-white/80">
+            {STEPS.map((s) => (
+              <li key={s} className="flex items-center gap-2">
+                <Icon name="check" size={14} className="text-white/60" /> {s}
               </li>
             ))}
           </ul>
-        )}
+          <button
+            className="mt-auto rounded-[10px] bg-white py-2.5 text-[13px] font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            style={{ marginTop: 24 }}
+            disabled={!name.trim() || create.isPending}
+          >
+            {create.isPending ? 'Creating…' : 'Create dataset'}
+          </button>
+          {create.error && <p className="mt-2 text-[13px] text-red-300">{create.error.message}</p>}
+        </form>
+
+        {projects.data?.map((p) => (
+          <Link
+            key={p.id}
+            to={`/projects/${p.id}`}
+            className="card group flex flex-col p-6 transition-shadow hover:shadow-[0_10px_30px_rgba(10,10,10,0.06)]"
+          >
+            <p className="text-[15px] font-semibold">{p.name}</p>
+            <p className="mt-1 text-[13px] text-muted">{TASK_LABEL[p.task_type]}</p>
+            <div className="mt-5 grid grid-cols-2 divide-x divide-line rounded-xl bg-sunken">
+              <div className="px-3 py-2.5">
+                <p className="text-[14px] font-medium tabular-nums">
+                  {p.review_threshold.toFixed(2)}
+                </p>
+                <p className="text-[11px] text-muted">review threshold</p>
+              </div>
+              <div className="px-3 py-2.5">
+                <p className="text-[14px] font-medium">
+                  {new Date(p.created_at).toLocaleDateString()}
+                </p>
+                <p className="text-[11px] text-muted">created</p>
+              </div>
+            </div>
+            <span className="mt-6 flex items-center justify-center gap-1.5 rounded-[10px] bg-ink py-2.5 text-[13px] font-medium text-white transition-colors group-hover:bg-ink-soft">
+              Open dataset <Icon name="chevron-right" size={14} />
+            </span>
+          </Link>
+        ))}
       </section>
+
+      {projects.isPending && <Loading />}
+      {projects.error && <ErrorText>{projects.error.message}</ErrorText>}
+      {projects.data?.length === 0 && (
+        <p className="mt-6 text-center text-[13px] text-muted">
+          No datasets yet. Create your first one to begin.
+        </p>
+      )}
     </div>
   )
 }

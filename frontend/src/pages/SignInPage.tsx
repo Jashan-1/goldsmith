@@ -3,7 +3,7 @@ export default function SignInPage() {
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="flex h-14 items-center px-6">
         <span className="flex items-center gap-2 text-[15px] font-semibold tracking-[-0.03em]">
-          <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-[#f5cd5b]">
+          <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-white">
             ✦
           </span>
           Goldsmith
