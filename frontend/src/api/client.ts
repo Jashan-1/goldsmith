@@ -117,6 +117,19 @@ export interface LabelStats {
   threshold: number
 }
 
+export interface Report {
+  total_rows: number
+  duplicates: number
+  seeds: number
+  unlabelled: number
+  status: Record<string, number>
+  reviewed: number
+  review_rate: number | null
+  human_minutes: number
+  coverage: { cluster_id: number; rows: number; human: number; flagged: boolean }[]
+  audit: { sampled: number; reviewed: number; changed: number }
+}
+
 export interface ReviewCard {
   row: Row | null
   counts: Record<string, number>

@@ -6,6 +6,7 @@ import Icon from './components/Icon'
 import { STEPS } from './lib/steps'
 import DataStep from './pages/project/DataStep'
 import LabelStep from './pages/project/LabelStep'
+import ReportStep from './pages/project/ReportStep'
 import ReviewStep from './pages/project/ReviewStep'
 import RulesStep from './pages/project/RulesStep'
 import SeedsStep from './pages/project/SeedsStep'
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="seeds" element={<SeedsStep />} />
               <Route path="label" element={<LabelStep />} />
               <Route path="review" element={<ReviewStep />} />
+              <Route path="report" element={<ReportStep />} />
             </Route>
             <Route path="*" element={<ProjectsPage />} />
           </Routes>
