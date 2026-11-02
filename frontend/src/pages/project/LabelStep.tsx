@@ -1,9 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { api, type Job, type LabelStats } from '../../api/client'
+import Icon from '../../components/Icon'
 import ThresholdPanel from '../../components/ThresholdPanel'
+import { ErrorText, Loading, PageHeader, Progress } from '../../components/ui'
 import { useJob } from '../../lib/useJob'
+
+const SIGNALS = [
+  ['Disagrees with your file', 'The label differs from the one already in your upload.'],
+  ['Samples disagree', 'Asked three times, the model gave different answers.'],
+  ['Rule concern', 'A guideline is borderline or hard to satisfy for this row.'],
+  ['Unfamiliar', 'Unlike anything a human has labelled so far.'],
+]
 
 export default function LabelStep() {
   const { projectId = '' } = useParams()
@@ -22,64 +31,79 @@ export default function LabelStep() {
     if (status === 'done') {
       queryClient.invalidateQueries({ queryKey: ['label-stats', projectId] })
       queryClient.invalidateQueries({ queryKey: ['rows', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['review', projectId] })
     }
   }, [status, projectId, queryClient])
 
   const start = useMutation({
     mutationFn: () =>
-      api<Job>(`/projects/${projectId}/label`, {
-        method: 'POST',
-        body: JSON.stringify({ cheap }),
-      }),
+      api<Job>(`/projects/${projectId}/label`, { method: 'POST', body: JSON.stringify({ cheap }) }),
     onSuccess: (j) => setJobId(j.id),
   })
 
-  if (stats.isPending) return <p className="text-stone-500">Loading…</p>
-  if (stats.error) return <p className="text-red-600">{stats.error.message}</p>
-  const counts = stats.data.counts
-  const labelled = stats.data.uncertainties.length > 0
+  const counts = stats.data?.counts ?? {}
+  const labelled = (stats.data?.uncertainties.length ?? 0) > 0
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-3 rounded-lg border border-stone-200 bg-white p-4">
-        <p className="text-sm text-stone-600">
-          The model labels every row except seeds and duplicates, using your rules and seed labels
-          as examples. Each row gets an uncertainty score, and only uncertain rows go to review.
-          Rows you've already reviewed are never relabelled.
-        </p>
+    <div className="mx-auto max-w-4xl space-y-8 px-6 py-8 md:px-10">
+      <PageHeader
+        kicker={<span className="mono-label">04 · Label dataset</span>}
+        title="Let the model do the first pass"
+        description="Every row except seeds and duplicates gets a label and an uncertainty score. Only uncertain rows go to your review queue. Rows you've reviewed are never relabelled."
+        actions={
+          (counts.needs_review ?? 0) > 0 && (
+            <Link to="../review" relative="path" className="btn-primary">
+              Review {counts.needs_review} rows
+              <Icon name="chevron-right" size={14} />
+            </Link>
+          )
+        }
+      />
+      {stats.isPending && <Loading />}
+      {stats.error && <ErrorText>{stats.error.message}</ErrorText>}
+
+      <section className="card p-5">
         <div className="flex flex-wrap items-center gap-4">
           <button
-            className="rounded-lg bg-amber-500 px-4 py-2 font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+            className="btn-primary"
             disabled={running || start.isPending}
             onClick={() => start.mutate()}
           >
-            {labelled ? 'Relabel rows' : 'Start labelling'}
+            <Icon name="sparkles" size={14} />
+            {running ? 'Labelling…' : labelled ? 'Relabel rows' : 'Start labelling'}
           </button>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={cheap} onChange={(e) => setCheap(e.target.checked)} />
-            Cheap mode (1 sample per row, skips the disagreement check)
+          <label className="flex cursor-pointer items-center gap-2 text-[13px] text-muted">
+            <input
+              type="checkbox"
+              className="accent-ink"
+              checked={cheap}
+              onChange={(e) => setCheap(e.target.checked)}
+            />
+            Cheap mode: one sample per row, skips the disagreement check
           </label>
         </div>
         {running && (
-          <div>
-            <p className="text-sm text-stone-600">Labelling… {job.data?.progress ?? 0}%</p>
-            <div className="mt-1 h-2 overflow-hidden rounded bg-stone-100">
-              <div
-                className="h-full bg-amber-500 transition-all"
-                style={{ width: `${job.data?.progress ?? 0}%` }}
-              />
+          <div className="mt-5">
+            <div className="mb-2 flex justify-between text-[13px] text-muted">
+              <span>Labelling rows…</span>
+              <span className="tabular-nums">{job.data?.progress ?? 0}%</span>
             </div>
+            <Progress value={job.data?.progress ?? 0} />
           </div>
         )}
-        {start.error && <p className="text-sm text-red-600">{start.error.message}</p>}
+        {start.error && (
+          <div className="mt-3">
+            <ErrorText>{start.error.message}</ErrorText>
+          </div>
+        )}
         {job.data?.error && (
-          <p className={`text-sm ${status === 'failed' ? 'text-red-600' : 'text-amber-700'}`}>
+          <p className={`mt-3 text-[13px] ${status === 'failed' ? 'text-bad' : 'text-gold'}`}>
             {job.data.error}
           </p>
         )}
       </section>
 
-      {labelled && (
+      {stats.data && labelled && (
         <ThresholdPanel
           key={stats.data.threshold}
           projectId={projectId}
@@ -87,9 +111,25 @@ export default function LabelStep() {
           seeds={counts.approved ?? 0}
         />
       )}
-      {(counts.unlabelled ?? 0) > 0 && labelled && (
-        <p className="text-sm text-stone-500">{counts.unlabelled} rows are still unlabelled.</p>
+      {labelled && (counts.unlabelled ?? 0) > 0 && (
+        <p className="text-[13px] text-muted">{counts.unlabelled} rows are still unlabelled.</p>
       )}
+
+      <section>
+        <p className="kicker">What sends a row to review</p>
+        <div className="mt-3 grid overflow-hidden rounded-2xl border border-line bg-surface sm:grid-cols-2">
+          {SIGNALS.map(([title, text], i) => (
+            <div
+              key={title}
+              className={`p-5 ${i % 2 ? 'sm:border-l' : ''} ${i > 1 ? 'border-t' : i === 1 ? 'border-t sm:border-t-0' : ''} border-line`}
+            >
+              <p className="mono-label">{String(i + 1).padStart(2, '0')}</p>
+              <p className="mt-3 text-[14px] font-medium">{title}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

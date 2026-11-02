@@ -12,3 +12,8 @@ licensed under the Apache License, Version 2.0:
   - backend/goldsmith/llm/prompts/label_v1.md: section layout adapted from the
     TextClassification task template. Modified to add rules, human seed examples,
     reviewer corrections and per-task instructions.
+
+This product includes icon paths from Lucide (https://lucide.dev), v0.469.0,
+licensed under the ISC License. Copyright (c) Lucide Contributors 2022.
+Portions Copyright (c) Cole Bemis 2013-2022 as part of Feather (MIT).
+  - frontend/src/components/Icon.tsx: SVG paths copied unchanged.

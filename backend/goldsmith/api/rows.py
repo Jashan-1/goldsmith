@@ -12,7 +12,14 @@ from goldsmith.schemas import ClusterCount, LabelInfo, RowOut, RowsPage
 router = APIRouter(prefix="/api/projects/{project_id}/rows", tags=["rows"])
 
 Status = Literal[
-    "unlabelled", "pending", "auto_accepted", "needs_review", "approved", "rejected", "edited"
+    "unlabelled",
+    "pending",
+    "auto_accepted",
+    "needs_review",
+    "approved",
+    "rejected",
+    "edited",
+    "reviewed",  # any row a human reviewed (approved, edited or rejected in review)
 ]
 
 
@@ -21,6 +28,7 @@ def list_rows(
     cluster: int | None = None,
     duplicates: Literal["include", "exclude", "only"] = "include",
     status: Status | None = None,
+    order: Literal["file", "uncertainty"] = "file",
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     project: Project = Depends(owned_project),
@@ -29,6 +37,9 @@ def list_rows(
     query = select(Row).where(Row.project_id == project.id)
     if status == "unlabelled":
         query = query.where(Row.id.not_in(select(Label.row_id).where(Label.is_current)))
+    elif status == "reviewed":
+        reviewed = select(Label.row_id).where(Label.is_current, Label.source == "human_review")
+        query = query.where(Row.id.in_(reviewed))
     elif status is not None:
         current = select(Label.row_id).where(Label.is_current, Label.status == status)
         query = query.where(Row.id.in_(current))
@@ -40,6 +51,10 @@ def list_rows(
         query = query.where(Row.duplicate_of.is_not(None))
 
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    if order == "uncertainty":  # most uncertain first, like the review queue
+        query = query.outerjoin(Label, (Label.row_id == Row.id) & Label.is_current).order_by(
+            Label.uncertainty.desc().nulls_last()
+        )
     page = db.scalars(
         query.order_by(Row.created_at, Row.row_index).offset(offset).limit(limit)
     ).all()

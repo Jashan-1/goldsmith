@@ -32,6 +32,9 @@ Goldsmith learns from these open-source projects: [DeepEval](https://github.com/
 
 - The labelling prompt ([label_v1.md](backend/goldsmith/llm/prompts/label_v1.md)) adapts the section layout of distilabel's `TextClassification` task template (Apache-2.0, Copyright Argilla, Inc.). See [NOTICE](NOTICE).
 
+- Icons in [Icon.tsx](frontend/src/components/Icon.tsx) are copied from [Lucide](https://lucide.dev) (ISC). See [NOTICE](NOTICE).
+- The app's layout and review inbox take inspiration from [hitl.sh](https://hitl.sh). Branding and code are our own.
+
 ## Licence
 
 Apache-2.0

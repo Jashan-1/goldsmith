@@ -2,9 +2,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { api, type FieldMapping, type Job, type Upload } from '../api/client'
 import { useJob } from '../lib/useJob'
+import Icon from './Icon'
 import MappingForm from './MappingForm'
+import { ErrorText, Progress } from './ui'
 
-export default function UploadPanel({ projectId }: { projectId: string }) {
+export default function UploadPanel({
+  projectId,
+  compact = false,
+}: {
+  projectId: string
+  compact?: boolean
+}) {
   const queryClient = useQueryClient()
   const [upload, setUpload] = useState<Upload | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
@@ -32,7 +40,6 @@ export default function UploadPanel({ projectId }: { projectId: string }) {
   })
 
   const job = useJob(jobId)
-
   const status = job.data?.status
   useEffect(() => {
     if (status === 'done') queryClient.invalidateQueries({ queryKey: ['rows', projectId] })
@@ -40,28 +47,29 @@ export default function UploadPanel({ projectId }: { projectId: string }) {
 
   if (upload)
     return (
-      <>
+      <div className="space-y-2">
         <MappingForm
           upload={upload}
           submitting={confirm.isPending}
           onSubmit={(m) => confirm.mutate(m)}
           onCancel={() => setUpload(null)}
         />
-        {confirm.error && <p className="mt-2 text-sm text-red-600">{confirm.error.message}</p>}
-      </>
+        {confirm.error && <ErrorText>{confirm.error.message}</ErrorText>}
+      </div>
     )
 
   if (jobId && status !== 'failed' && status !== 'done')
     return (
-      <div className="rounded-lg border border-stone-200 bg-white p-4">
-        <p className="text-sm text-stone-600">
-          Importing: embedding, removing duplicates and clustering… {job.data?.progress ?? 0}%
+      <div className="card p-5">
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="font-medium">Importing your data</span>
+          <span className="text-muted tabular-nums">{job.data?.progress ?? 0}%</span>
+        </div>
+        <p className="mt-1 text-[13px] text-muted">
+          Embedding rows, removing near-duplicates and grouping similar ones.
         </p>
-        <div className="mt-2 h-2 overflow-hidden rounded bg-stone-100">
-          <div
-            className="h-full bg-amber-500 transition-all"
-            style={{ width: `${job.data?.progress ?? 0}%` }}
-          />
+        <div className="mt-4">
+          <Progress value={job.data?.progress ?? 0} />
         </div>
       </div>
     )
@@ -69,11 +77,11 @@ export default function UploadPanel({ projectId }: { projectId: string }) {
   const pick = (files: FileList | null) => files?.[0] && send.mutate(files[0])
 
   return (
-    <div>
+    <div className="space-y-2">
       <label
-        className={`block cursor-pointer rounded-lg border-2 border-dashed p-8 text-center ${
-          dragging ? 'border-amber-500 bg-amber-50' : 'border-stone-300 bg-white'
-        }`}
+        className={`flex cursor-pointer flex-col items-center rounded-2xl border border-dashed text-center transition-colors ${
+          compact ? 'px-6 py-6' : 'px-6 py-14'
+        } ${dragging ? 'border-gold bg-gold-soft' : 'border-line-strong bg-surface hover:bg-sunken/50'}`}
         onDragOver={(e) => {
           e.preventDefault()
           setDragging(true)
@@ -91,17 +99,19 @@ export default function UploadPanel({ projectId }: { projectId: string }) {
           className="sr-only"
           onChange={(e) => pick(e.target.files)}
         />
-        <p className="font-medium">
-          {send.isPending ? 'Uploading…' : 'Drop a CSV or JSONL file, or click to choose'}
+        <span className="grid size-10 place-items-center rounded-xl border border-line bg-surface text-muted shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <Icon name="cloud-upload" />
+        </span>
+        <p className="mt-3 text-[14px] font-medium">
+          {send.isPending ? 'Uploading…' : 'Drop a file here, or click to choose'}
         </p>
-        <p className="mt-1 text-sm text-stone-500">
-          Q&amp;A pairs and chat transcripts (OpenAI messages) work too. Up to 10 MB / 5,000 rows.
+        <p className="mt-1 text-[13px] text-muted">
+          CSV or JSONL · Q&amp;A pairs · chat transcripts in OpenAI format · up to 10 MB / 5,000
+          rows
         </p>
       </label>
-      {send.error && <p className="mt-2 text-sm text-red-600">{send.error.message}</p>}
-      {status === 'failed' && job.data && (
-        <p className="mt-2 text-sm text-red-600">Import failed: {job.data.error}</p>
-      )}
+      {send.error && <ErrorText>{send.error.message}</ErrorText>}
+      {status === 'failed' && job.data && <ErrorText>Import failed: {job.data.error}</ErrorText>}
     </div>
   )
 }

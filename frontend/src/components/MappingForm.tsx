@@ -1,10 +1,19 @@
 import { useState } from 'react'
 import type { FieldMapping, Upload } from '../api/client'
 import { mappingError, toMapping, toRoles, type Role } from '../lib/mapping'
+import Icon from './Icon'
+import { Badge, ErrorText } from './ui'
+
+const ROLES: { value: Role; label: string; dot: string }[] = [
+  { value: 'input', label: 'Input', dot: 'bg-ink' },
+  { value: 'reference', label: 'Reference', dot: 'bg-gold' },
+  { value: 'metadata', label: 'Metadata', dot: 'bg-faint' },
+  { value: 'ignore', label: 'Ignore', dot: 'bg-line-strong' },
+]
 
 function cell(value: unknown): string {
   const text = typeof value === 'string' ? value : JSON.stringify(value)
-  return text && text.length > 80 ? `${text.slice(0, 80)}…` : (text ?? '')
+  return text && text.length > 90 ? `${text.slice(0, 90)}…` : (text ?? '')
 }
 
 export default function MappingForm({
@@ -22,38 +31,59 @@ export default function MappingForm({
   const error = mappingError(roles)
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-stone-600">
-        <span className="font-medium text-stone-900">{upload.filename}</span> · {upload.format} ·{' '}
-        {upload.row_count} rows. Check what each column is used for.
-      </p>
-      <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-stone-100">
-            <tr>
-              {upload.columns.map((c) => (
-                <th key={c} className="px-3 py-2 align-top font-medium">
-                  <div>{c}</div>
-                  <select
-                    aria-label={`Use of column ${c}`}
-                    className="mt-1 rounded border border-stone-300 bg-white px-1 py-0.5 text-xs font-normal"
-                    value={roles[c]}
-                    onChange={(e) => setRoles({ ...roles, [c]: e.target.value as Role })}
-                  >
-                    <option value="input">Input</option>
-                    <option value="reference">Reference output</option>
-                    <option value="metadata">Metadata</option>
-                    <option value="ignore">Ignore</option>
-                  </select>
-                </th>
-              ))}
+    <div className="card overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="grid size-9 place-items-center rounded-lg bg-sunken text-muted">
+            <Icon name="file-text" />
+          </span>
+          <div>
+            <p className="text-[14px] font-medium">{upload.filename}</p>
+            <p className="text-[12px] text-muted">
+              {upload.row_count} rows · <span className="uppercase">{upload.format}</span>
+            </p>
+          </div>
+        </div>
+        <p className="text-[13px] text-muted">Tell Goldsmith what each column is for.</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead>
+            <tr className="border-b border-line bg-sunken/60">
+              {upload.columns.map((c) => {
+                const role = ROLES.find((r) => r.value === roles[c])!
+                return (
+                  <th key={c} className="min-w-40 px-4 py-3 align-top font-normal">
+                    <div className="font-mono text-[12px] text-ink">{c}</div>
+                    <label className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-0.5 pr-1 pl-2">
+                      <span className={`size-1.5 rounded-full ${role.dot}`} />
+                      <select
+                        aria-label={`Use of column ${c}`}
+                        className="cursor-pointer bg-transparent pr-1 text-[12px] font-medium outline-none"
+                        value={roles[c]}
+                        onChange={(e) => setRoles({ ...roles, [c]: e.target.value as Role })}
+                      >
+                        {ROLES.map((r) => (
+                          <option key={r.value} value={r.value}>
+                            {r.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </th>
+                )
+              })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
+          <tbody className="divide-y divide-line">
             {upload.preview.map((r, i) => (
               <tr key={i}>
                 {upload.columns.map((c) => (
-                  <td key={c} className="px-3 py-2 align-top text-stone-700">
+                  <td
+                    key={c}
+                    className={`px-4 py-2.5 align-top ${roles[c] === 'ignore' ? 'text-faint' : 'text-ink-soft'}`}
+                  >
                     {cell(r[c])}
                   </td>
                 ))}
@@ -62,21 +92,21 @@ export default function MappingForm({
           </tbody>
         </table>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-2">
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-line px-5 py-3">
         <button
-          className="rounded-lg bg-amber-500 px-4 py-2 font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+          className="btn-primary"
           disabled={!!error || submitting}
           onClick={() => onSubmit(toMapping(roles))}
         >
-          Confirm and import
+          {submitting ? 'Importing…' : 'Confirm and import'}
         </button>
-        <button
-          className="rounded-lg px-4 py-2 text-stone-600 hover:bg-stone-100"
-          onClick={onCancel}
-        >
+        <button className="btn-ghost" onClick={onCancel}>
           Cancel
         </button>
+        <span className="ml-auto">
+          {error ? <ErrorText>{error}</ErrorText> : <Badge tone="ok">Mapping looks good</Badge>}
+        </span>
       </div>
     </div>
   )

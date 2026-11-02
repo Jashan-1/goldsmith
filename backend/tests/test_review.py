@@ -157,3 +157,17 @@ def test_review_needs_a_label_and_ownership(client, client_as, make_user, labell
     )
     instruct = f"/api/projects/{pid}/review/{row['id']}/instruct"
     assert bob.post(instruct, json={"instruction": "x"}).status_code == 404
+
+
+def test_rows_sorted_by_uncertainty_and_reviewed_filter(client, labelled_project):
+    pid = labelled_project
+    queue_everything(client, pid)
+    base = f"/api/projects/{pid}/rows"
+    items = client.get(f"{base}?status=needs_review&order=uncertainty&limit=200").json()["items"]
+    scores = [r["label"]["uncertainty"] for r in items]
+    assert len(scores) == 90 and scores == sorted(scores, reverse=True)
+    assert items[0]["id"] == client.get(f"/api/projects/{pid}/review/next").json()["row"]["id"]
+
+    client.post(f"/api/projects/{pid}/review/{items[0]['id']}", json={"action": "reject"})
+    reviewed = client.get(f"{base}?status=reviewed").json()
+    assert reviewed["total"] == 1 and reviewed["items"][0]["label"]["status"] == "rejected"
