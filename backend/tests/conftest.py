@@ -68,3 +68,8 @@ def client_as(db: Session) -> Callable[[User], TestClient]:
         return TestClient(app)
 
     return _client
+
+
+@pytest.fixture
+def client(client_as: Callable[[User], TestClient], make_user: Callable[[str], User]) -> TestClient:
+    return client_as(make_user("a@example.com"))

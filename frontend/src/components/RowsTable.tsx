@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, type RowsPage } from '../api/client'
-import { inputText } from '../lib/rows'
+import { inputText, valueText } from '../lib/rows'
 
 const PAGE = 50
 
@@ -83,13 +83,7 @@ export default function RowsTable({ projectId }: { projectId: string }) {
                   )}
                 </td>
                 <td className="max-w-xs px-3 py-2 align-top">
-                  <div className="line-clamp-3">
-                    {r.reference_output == null
-                      ? '—'
-                      : typeof r.reference_output === 'string'
-                        ? r.reference_output
-                        : JSON.stringify(r.reference_output)}
-                  </div>
+                  <div className="line-clamp-3">{valueText(r.reference_output) || '—'}</div>
                 </td>
                 <td className="px-3 py-2 align-top">{r.cluster_id ?? '—'}</td>
               </tr>

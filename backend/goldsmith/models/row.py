@@ -23,3 +23,4 @@ class Row(Entity):
     embedding: Mapped[Any | None] = mapped_column(Vector(EMBEDDING_DIM))
     cluster_id: Mapped[int | None]
     duplicate_of: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("rows.id"))
+    is_seed: Mapped[bool] = mapped_column(default=False, server_default="false")

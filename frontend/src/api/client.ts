@@ -73,6 +73,7 @@ export interface Row {
   metadata: Record<string, unknown>
   cluster_id: number | null
   duplicate_of: string | null
+  is_seed: boolean
 }
 
 export interface RowsPage {
@@ -80,4 +81,22 @@ export interface RowsPage {
   total: number
   clusters: { cluster_id: number; count: number }[]
   duplicates: number
+}
+
+export type RuleKind = 'criterion' | 'guardrail' | 'rubric'
+
+export interface Rule {
+  id: string | null
+  text: string
+  kind: RuleKind
+}
+
+export interface RuleSet {
+  version: number
+  rules: Rule[]
+}
+
+export interface Seed {
+  row: Row
+  expected_output: unknown
 }

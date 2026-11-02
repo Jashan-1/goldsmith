@@ -69,6 +69,7 @@ class RowOut(BaseModel):
     metadata: dict[str, Any] = Field(validation_alias="meta")
     cluster_id: int | None
     duplicate_of: uuid.UUID | None
+    is_seed: bool
 
 
 class ClusterCount(BaseModel):
@@ -81,3 +82,31 @@ class RowsPage(BaseModel):
     total: int
     clusters: list[ClusterCount]
     duplicates: int
+
+
+class Rule(BaseModel):
+    id: str | None = Field(default=None, max_length=20)
+    text: str = Field(min_length=1, max_length=1000)
+    kind: Literal["criterion", "guardrail", "rubric"]
+
+
+class RulesIn(BaseModel):
+    rules: list[Rule] = Field(max_length=50)
+
+
+class RulesOut(BaseModel):
+    version: int  # 0 means no rules saved yet
+    rules: list[Rule]
+
+
+class SeedSelectIn(BaseModel):
+    count: int = Field(default=10, ge=5, le=50)
+
+
+class SeedLabelIn(BaseModel):
+    expected_output: str = Field(min_length=1, max_length=20000)
+
+
+class SeedOut(BaseModel):
+    row: RowOut
+    expected_output: Any | None  # the human label, if saved
