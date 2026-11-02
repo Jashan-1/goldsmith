@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from goldsmith.api.deps import current_user, owned_project
+from goldsmith.core.labelling import apply_threshold
 from goldsmith.db import get_db
 from goldsmith.models import Project, User
 from goldsmith.schemas import ProjectCreate, ProjectOut, ProjectUpdate
@@ -41,7 +42,10 @@ def update_project(
     project: Project = Depends(owned_project),
     db: Session = Depends(get_db),
 ) -> Project:
-    for key, value in body.model_dump(exclude_unset=True, exclude_none=True).items():
+    changes = body.model_dump(exclude_unset=True, exclude_none=True)
+    for key, value in changes.items():
         setattr(project, key, value)
+    if "review_threshold" in changes:
+        apply_threshold(db, project)
     db.commit()
     return project

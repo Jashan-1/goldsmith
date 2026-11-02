@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from goldsmith.core.labelling import run_labelling
 from goldsmith.db import SessionLocal
 from goldsmith.ingest.job import run_ingest
 from goldsmith.models import Job
@@ -16,7 +17,7 @@ from goldsmith.models import Job
 logger = logging.getLogger(__name__)
 
 Handler = Callable[[Session, Job, Callable[[int], None]], None]
-HANDLERS: dict[str, Handler] = {"ingest": run_ingest}
+HANDLERS: dict[str, Handler] = {"ingest": run_ingest, "label": run_labelling}
 
 
 def claim_next(db: Session) -> Job | None:

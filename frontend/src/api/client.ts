@@ -74,6 +74,7 @@ export interface Row {
   cluster_id: number | null
   duplicate_of: string | null
   is_seed: boolean
+  label: LabelInfo | null
 }
 
 export interface RowsPage {
@@ -99,4 +100,19 @@ export interface RuleSet {
 export interface Seed {
   row: Row
   expected_output: unknown
+}
+
+export interface LabelInfo {
+  expected_output: unknown
+  rationale: string | null
+  source: string
+  status: string
+  uncertainty: number | null
+  uncertainty_breakdown: Record<string, unknown> | null
+}
+
+export interface LabelStats {
+  counts: Record<string, number>
+  uncertainties: number[]
+  threshold: number
 }

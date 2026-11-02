@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { api, type FieldMapping, type Job, type Upload } from '../api/client'
+import { useJob } from '../lib/useJob'
 import MappingForm from './MappingForm'
 
 export default function UploadPanel({ projectId }: { projectId: string }) {
@@ -30,13 +31,7 @@ export default function UploadPanel({ projectId }: { projectId: string }) {
     },
   })
 
-  const job = useQuery({
-    queryKey: ['job', jobId],
-    queryFn: () => api<Job>(`/jobs/${jobId}`),
-    enabled: !!jobId,
-    refetchInterval: (q) =>
-      q.state.data?.status === 'done' || q.state.data?.status === 'failed' ? false : 1000,
-  })
+  const job = useJob(jobId)
 
   const status = job.data?.status
   useEffect(() => {

@@ -1,19 +1,22 @@
 import re
+import threading
 import zlib
 from collections.abc import Callable
 from typing import Any
-
-from pydantic import BaseModel
 
 from goldsmith.models import EMBEDDING_DIM
 
 
 class FakeProvider:
-    """Deterministic stand-in for the LLM. No test calls the real API."""
+    """Deterministic stand-in for the LLM. No test calls the real API.
+
+    `responses` maps a schema class name to fn(user_message, temperature) -> dict or model.
+    """
 
     def __init__(self) -> None:
-        self.responses: dict[type[BaseModel], Callable[[str], Any]] = {}
-        self.calls: list[tuple[str, str]] = []
+        self.responses: dict[str, Callable[[str, float | None], Any]] = {}
+        self.calls: list[tuple[str, str, float | None]] = []
+        self._lock = threading.Lock()  # labelling calls from a thread pool
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         # Hashed bag of words: same text -> same vector; shared words -> close.
@@ -25,8 +28,11 @@ class FakeProvider:
             out.append(vec)
         return out
 
-    def structured(self, instructions: str, user: str, schema: type[Any], temperature: Any = None):
-        self.calls.append((instructions, user))
-        if schema not in self.responses:
+    def structured(
+        self, instructions: str, user: str, schema: type[Any], temperature: float | None = None
+    ) -> Any:
+        with self._lock:
+            self.calls.append((instructions, user, temperature))
+        if schema.__name__ not in self.responses:
             raise RuntimeError(f"FakeProvider has no response for {schema.__name__}")
-        return self.responses[schema](user)
+        return schema.model_validate(self.responses[schema.__name__](user, temperature))

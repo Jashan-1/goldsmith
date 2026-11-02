@@ -21,7 +21,9 @@ class LLMError(RuntimeError):
 
 
 def load_prompt(name: str) -> str:
-    return (PROMPTS_DIR / f"{name}.md").read_text()
+    text = (PROMPTS_DIR / f"{name}.md").read_text()
+    # Drop <!-- --> header lines (credits/notes for humans, not the model).
+    return "\n".join(line for line in text.splitlines() if not line.startswith("<!--")).strip()
 
 
 class LLMProvider(Protocol):

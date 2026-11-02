@@ -28,6 +28,10 @@ Locally, `DEV_AUTH_BYPASS=true` signs you in as a fake dev user. For real Google
 
 Goldsmith learns from these open-source projects: [DeepEval](https://github.com/confident-ai/deepeval), [distilabel](https://github.com/argilla-io/distilabel) and [Argilla](https://github.com/argilla-io/argilla), [Langfuse](https://github.com/langfuse/langfuse) and [Kiln](https://github.com/Kiln-AI/Kiln).
 
+### Code and prompts adapted from other projects
+
+- The labelling prompt ([label_v1.md](backend/goldsmith/llm/prompts/label_v1.md)) adapts the section layout of distilabel's `TextClassification` task template (Apache-2.0, Copyright Argilla, Inc.). See [NOTICE](NOTICE).
+
 ## Licence
 
 Apache-2.0

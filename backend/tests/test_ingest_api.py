@@ -1,7 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from goldsmith.ingest.parse import FieldMapping
 from goldsmith.worker.runner import run_next
 from tests.fake_provider import FakeProvider
 from tests.helpers import ingest, new_project, upload
@@ -50,9 +49,11 @@ def test_upload_response(client: TestClient):
 
 
 def test_llm_mapping_fallback(client: TestClient, fake_llm: FakeProvider):
-    fake_llm.responses[FieldMapping] = lambda _: FieldMapping(
-        input=["col_a"], reference_output="col_b", metadata=["col_c"]
-    )
+    fake_llm.responses["FieldMapping"] = lambda _user, _temp: {
+        "input": ["col_a"],
+        "reference_output": "col_b",
+        "metadata": ["col_c"],
+    }
     body = upload(client, new_project(client), "unknown_columns.csv").json()
     assert body["proposed_mapping"]["input"] == ["col_a"]
     assert len(fake_llm.calls) == 1

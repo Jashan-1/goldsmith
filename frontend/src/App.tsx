@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Route, Routes } from 'react-router'
 import { api, ApiError, type User } from './api/client'
 import DataStep from './pages/project/DataStep'
+import LabelStep from './pages/project/LabelStep'
 import RulesStep from './pages/project/RulesStep'
 import SeedsStep from './pages/project/SeedsStep'
 import ProjectPage from './pages/ProjectPage'
@@ -37,6 +38,7 @@ export default function App() {
             <Route index element={<DataStep />} />
             <Route path="rules" element={<RulesStep />} />
             <Route path="seeds" element={<SeedsStep />} />
+            <Route path="label" element={<LabelStep />} />
           </Route>
           <Route path="*" element={<ProjectsPage />} />
         </Routes>

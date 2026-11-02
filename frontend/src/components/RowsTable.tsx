@@ -5,15 +5,26 @@ import { inputText, valueText } from '../lib/rows'
 
 const PAGE = 50
 
+const STATUS_LABELS: Record<string, string> = {
+  unlabelled: 'Unlabelled',
+  needs_review: 'Needs review',
+  auto_accepted: 'Auto-accepted',
+  approved: 'Approved',
+  edited: 'Edited',
+  rejected: 'Rejected',
+}
+
 export default function RowsTable({ projectId }: { projectId: string }) {
   const [cluster, setCluster] = useState('')
   const [duplicates, setDuplicates] = useState('include')
+  const [status, setStatus] = useState('')
   const [offset, setOffset] = useState(0)
 
   const params = new URLSearchParams({ duplicates, offset: String(offset), limit: String(PAGE) })
   if (cluster) params.set('cluster', cluster)
+  if (status) params.set('status', status)
   const rows = useQuery({
-    queryKey: ['rows', projectId, cluster, duplicates, offset],
+    queryKey: ['rows', projectId, cluster, duplicates, status, offset],
     queryFn: () => api<RowsPage>(`/projects/${projectId}/rows?${params}`),
     placeholderData: keepPreviousData,
   })
@@ -21,7 +32,7 @@ export default function RowsTable({ projectId }: { projectId: string }) {
   if (rows.isPending) return <p className="text-stone-500">Loading rows…</p>
   if (rows.error) return <p className="text-red-600">{rows.error.message}</p>
   const { items, total, clusters, duplicates: dupCount } = rows.data
-  if (total === 0 && !cluster && duplicates === 'include')
+  if (total === 0 && !cluster && !status && duplicates === 'include')
     return <p className="text-stone-500">No rows yet. Upload a file to get started.</p>
 
   const select = 'rounded-lg border border-stone-300 bg-white px-2 py-1 text-sm'
@@ -57,6 +68,22 @@ export default function RowsTable({ projectId }: { projectId: string }) {
           <option value="exclude">Hide duplicates</option>
           <option value="only">Only duplicates ({dupCount})</option>
         </select>
+        <select
+          aria-label="Filter by status"
+          className={select}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setOffset(0)
+          }}
+        >
+          <option value="">All statuses</option>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
         <span className="ml-auto text-stone-500">{total} rows</span>
       </div>
 
@@ -67,6 +94,7 @@ export default function RowsTable({ projectId }: { projectId: string }) {
               <th className="px-3 py-2 font-medium">#</th>
               <th className="px-3 py-2 font-medium">Input</th>
               <th className="px-3 py-2 font-medium">Reference</th>
+              <th className="px-3 py-2 font-medium">Label</th>
               <th className="px-3 py-2 font-medium">Cluster</th>
             </tr>
           </thead>
@@ -84,6 +112,20 @@ export default function RowsTable({ projectId }: { projectId: string }) {
                 </td>
                 <td className="max-w-xs px-3 py-2 align-top">
                   <div className="line-clamp-3">{valueText(r.reference_output) || '—'}</div>
+                </td>
+                <td className="max-w-xs px-3 py-2 align-top">
+                  {r.label ? (
+                    <>
+                      <div className="line-clamp-3">{valueText(r.label.expected_output)}</div>
+                      <div className="mt-1 text-xs text-stone-500">
+                        {STATUS_LABELS[r.label.status] ?? r.label.status}
+                        {r.label.uncertainty != null &&
+                          ` · uncertainty ${r.label.uncertainty.toFixed(2)}`}
+                      </div>
+                    </>
+                  ) : (
+                    '—'
+                  )}
                 </td>
                 <td className="px-3 py-2 align-top">{r.cluster_id ?? '—'}</td>
               </tr>

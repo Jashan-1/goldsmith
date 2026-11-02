@@ -7,8 +7,9 @@ from goldsmith.worker.runner import run_next
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def new_project(client: TestClient) -> str:
-    return client.post("/api/projects", json={"name": "p", "task_type": "qa"}).json()["id"]
+def new_project(client: TestClient, task_type: str = "qa") -> str:
+    body = {"name": "p", "task_type": task_type}
+    return client.post("/api/projects", json=body).json()["id"]
 
 
 def upload(client: TestClient, pid: str, name: str, content: bytes | None = None):
@@ -16,8 +17,8 @@ def upload(client: TestClient, pid: str, name: str, content: bytes | None = None
     return client.post(f"/api/projects/{pid}/files", files={"file": (name, data)})
 
 
-def ingest(client: TestClient, name: str) -> tuple[str, dict]:
-    pid = new_project(client)
+def ingest(client: TestClient, name: str, task_type: str = "qa") -> tuple[str, dict]:
+    pid = new_project(client, task_type)
     up = upload(client, pid, name).json()
     res = client.post(f"/api/projects/{pid}/files/{up['id']}/mapping", json=up["proposed_mapping"])
     assert res.status_code == 202

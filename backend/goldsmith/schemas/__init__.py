@@ -70,6 +70,7 @@ class RowOut(BaseModel):
     cluster_id: int | None
     duplicate_of: uuid.UUID | None
     is_seed: bool
+    label: "LabelInfo | None" = None
 
 
 class ClusterCount(BaseModel):
@@ -110,3 +111,27 @@ class SeedLabelIn(BaseModel):
 class SeedOut(BaseModel):
     row: RowOut
     expected_output: Any | None  # the human label, if saved
+
+
+class LabelIn(BaseModel):
+    cheap: bool = False  # 1 sample, no self-disagreement
+
+
+class LabelInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    expected_output: Any
+    rationale: str | None
+    source: str
+    status: str
+    uncertainty: float | None
+    uncertainty_breakdown: dict[str, Any] | None
+
+
+class LabelStats(BaseModel):
+    counts: dict[str, int]  # by label status, plus "unlabelled"
+    uncertainties: list[float]  # LLM labels the threshold can still move
+    threshold: float
+
+
+RowOut.model_rebuild()

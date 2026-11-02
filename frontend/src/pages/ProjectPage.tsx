@@ -6,6 +6,7 @@ const STEPS = [
   { to: '', label: '1. Data', end: true },
   { to: 'rules', label: '2. Rules', end: false },
   { to: 'seeds', label: '3. Seeds', end: false },
+  { to: 'label', label: '4. Label', end: false },
 ]
 
 export default function ProjectPage() {

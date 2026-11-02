@@ -5,3 +5,10 @@ This product includes software developed by Jashan
 as part of the Goldsmith project (https://github.com/Jashan-1/goldsmith).
 
 Licensed under the Apache License, Version 2.0.
+
+This product includes material adapted from distilabel
+(https://github.com/argilla-io/distilabel), Copyright 2023-present Argilla, Inc.,
+licensed under the Apache License, Version 2.0:
+  - backend/goldsmith/llm/prompts/label_v1.md: section layout adapted from the
+    TextClassification task template. Modified to add rules, human seed examples,
+    reviewer corrections and per-task instructions.
