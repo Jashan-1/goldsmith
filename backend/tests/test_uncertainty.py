@@ -10,15 +10,21 @@ from goldsmith.core.uncertainty import (
     text_disagreement,
 )
 
-W = {"disagreement": 0.4, "rule_concerns": 0.3, "novelty": 0.2, "confidence": 0.1}
+W = {"reference": 0.8, "disagreement": 0.7, "rule_concerns": 0.6, "novelty": 0.4, "confidence": 0.3}
 
 
-def test_combine_is_weighted_mean_of_measured_signals():
-    signals = {"disagreement": 1.0, "rule_concerns": 0.0, "novelty": 0.5, "confidence": 0.0}
-    assert combine(signals, W) == pytest.approx(0.5)
-    # Cheap mode: disagreement skipped, remaining weights renormalised.
-    cheap = {**signals, "disagreement": None}
-    assert combine(cheap, W) == pytest.approx(0.1 / 0.6)
+def test_combine_is_noisy_or():
+    quiet = {"reference": 0.0, "disagreement": 0.0, "rule_concerns": 0.0, "novelty": 0.0}
+    assert combine(quiet, W) == 0.0
+    # One strong signal alone crosses the default 0.5 threshold, whatever the others say.
+    assert combine({**quiet, "reference": 1.0}, W) == pytest.approx(0.8)
+    assert combine({**quiet, "rule_concerns": 1.0}, W) == pytest.approx(0.6)
+    # Novelty alone never does.
+    assert combine({**quiet, "novelty": 1.0}, W) == pytest.approx(0.4)
+    # Signals compound: 1 - (1 - 0.4)(1 - 0.35)
+    assert combine({**quiet, "novelty": 1.0, "disagreement": 0.5}, W) == pytest.approx(0.61)
+    # Unmeasured signals (None) are skipped, unknown names weigh 0.
+    assert combine({"reference": None, "novelty": 0.5, "other": 1.0}, W) == pytest.approx(0.2)
     assert combine({}, W) == 0.0
 
 

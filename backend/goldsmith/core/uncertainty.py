@@ -7,12 +7,17 @@ from goldsmith.ingest.similarity import normalize
 
 
 def combine(signals: dict[str, float | None], weights: dict[str, float]) -> float:
-    """Weighted mean of the signals that were measured (None = skipped, e.g. in cheap mode)."""
-    used = {k: v for k, v in signals.items() if v is not None and weights.get(k, 0) > 0}
-    total = sum(weights[k] for k in used)
-    if total == 0:
-        return 0.0
-    return float(sum(weights[k] * v for k, v in used.items()) / total)
+    """Noisy-OR: any one strong signal can push a row to review on its own.
+
+    Each weight is the most that signal alone can contribute (0 to 1). None = not measured
+    (cheap mode, or no reference in the upload). A weighted mean diluted single strong signals,
+    so a confident model with one red flag never crossed the threshold.
+    """
+    keep = 1.0
+    for name, value in signals.items():
+        if value is not None:
+            keep *= 1 - min(1.0, max(0.0, weights.get(name, 0) * value))
+    return 1 - keep
 
 
 def label_disagreement(outputs: list[str]) -> float:

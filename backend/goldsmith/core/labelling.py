@@ -1,5 +1,6 @@
 """LLM labelling of non-seed rows, with an uncertainty score per row. Independent of FastAPI."""
 
+import json
 import uuid
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -63,7 +64,14 @@ class RowResult:
     row: Row
     outputs: list[LabelOutput] = field(default_factory=list)
     disagreement: float | None = None
+    reference: float | None = None  # disagreement with the reference already in the upload
     error: str | None = None
+
+
+def _reference_text(value: Any) -> str | None:
+    if value is None or value == "":
+        return None
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
 
 
 def build_instructions(
@@ -136,12 +144,19 @@ def _label_one(
             for _ in range(samples - 1)
         ]
         texts = [o.expected_output for o in result.outputs]
-        if samples > 1:
-            result.disagreement = (
-                label_disagreement(texts)
-                if is_classification
-                else text_disagreement(np.array(provider.embed(texts)))
-            )
+        ref = _reference_text(row.reference_output)
+        if is_classification:
+            if samples > 1:
+                result.disagreement = label_disagreement(texts)
+            if ref is not None:
+                result.reference = float(ref.strip().lower() != texts[0].strip().lower())
+        elif samples > 1 or ref is not None:
+            # One embedding call covers the samples and the uploaded reference.
+            vectors = np.array(provider.embed(texts + ([ref] if ref is not None else [])))
+            if samples > 1:
+                result.disagreement = text_disagreement(vectors[:samples])
+            if ref is not None:
+                result.reference = text_disagreement(vectors[[0, -1]])
     except Exception as e:  # one bad row shouldn't sink the whole job
         result.error = str(e) or type(e).__name__
     return result
@@ -229,6 +244,7 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
         first = result.outputs[0]
         confidence = min(1.0, max(0.0, first.confidence))
         signals = {
+            "reference": result.reference,
             "disagreement": result.disagreement,
             "rule_concerns": 1.0 if first.rule_concerns else 0.0,
             "novelty": nov,

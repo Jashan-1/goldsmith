@@ -99,15 +99,27 @@ def test_labels_100_rows_end_to_end(client: TestClient, labelled_project: str, f
         assert label["status"] in ("auto_accepted", "needs_review")
         assert 0 <= label["uncertainty"] <= 1
         b = label["uncertainty_breakdown"]
-        assert set(b["signals"]) == {"disagreement", "rule_concerns", "novelty", "confidence"}
+        assert set(b["signals"]) == {
+            "reference",
+            "disagreement",
+            "rule_concerns",
+            "novelty",
+            "confidence",
+        }
         assert len(b["samples"]) == 3
         assert label["expected_output"] in {"billing", "shipping", "account", "bug"}
+        # Disagreeing with the uploaded reference alone sends a row to review.
+        mismatch = label["expected_output"] != r["reference_output"]
+        assert b["signals"]["reference"] == float(mismatch)
+        if mismatch:
+            assert label["status"] == "needs_review"
 
     # 3 samples per non-seed row, first at temperature 0.
     llm_calls = [c for c in fake_llm.calls if "## Row to label" in c[1]]
     assert len(llm_calls) == 90 * 3
     assert sorted({c[2] for c in llm_calls}) == [0, 0.7]
 
+    assert any(r["label"]["status"] == "needs_review" for r in rows)
     # Questions disagreed across samples and should rank as more uncertain.
     question = next(r for r in rows if not r["is_seed"] and "?" in r["input"]["text"])
     assert question["label"]["uncertainty_breakdown"]["signals"]["disagreement"] > 0
@@ -234,3 +246,28 @@ def test_label_preconditions(client: TestClient, client_as, make_user):
     assert client.get(f"/api/projects/{new_project(client)}/label/stats").json()["counts"] == {
         "unlabelled": 0
     }
+
+
+def test_text_tasks_compare_with_reference_by_embedding(client, fake_llm):
+    """QA rows: an answer far from the uploaded reference answer is flagged."""
+    fake_llm.responses["LabelOutput"] = lambda user, t: {
+        "expected_output": "Refunds are available within 30 days of purchase."
+        if "refund" in row_of(user).lower()
+        else "I am not sure.",
+        "rationale": "",
+        "rules_applied": [],
+        "rule_concerns": [],
+        "confidence": 0.9,
+    }
+    pid, _ = ingest(client, "qa.csv")
+    seed = client.post(f"/api/projects/{pid}/seeds/select", json={"count": 5}).json()[0]["row"]
+    client.post(f"/api/projects/{pid}/seeds/{seed['id']}", json={"expected_output": "x"})
+    assert run_label_job(client, pid, cheap=True)["status"] == "done"
+    rows = client.get(f"/api/projects/{pid}/rows").json()["items"]
+    refs = {
+        r["input"]["question"]: r["label"]["uncertainty_breakdown"]["signals"]["reference"]
+        for r in rows
+        if r["label"] and r["label"]["source"] == "llm"
+    }
+    assert refs.get("What is the refund window?", 0) == 0  # identical answer (unless it's a seed)
+    assert max(refs.values()) == 1.0  # "I am not sure." vs a real answer
