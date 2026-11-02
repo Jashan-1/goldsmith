@@ -1,7 +1,7 @@
 Goldsmith
 Copyright 2026 Jashan
 
-This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+This product includes software developed by Jashan
+as part of the Goldsmith project (https://github.com/Jashan-1/goldsmith).
 
-No third-party source files are copied into this repository. Third-party
-libraries are used as dependencies under their own licences.
+Licensed under the Apache License, Version 2.0.
