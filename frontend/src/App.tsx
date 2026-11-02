@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link, NavLink, Route, Routes, useLocation, useMatch } from 'react-router'
 import { api, ApiError, type LabelStats, type Project, type User } from './api/client'
+import AccountMenu from './components/AccountMenu'
 import Icon from './components/Icon'
 import { STEPS } from './lib/steps'
 import DataStep from './pages/project/DataStep'
@@ -48,7 +49,6 @@ function useProjectId(): string | null {
 }
 
 function Sidebar({ user }: { user: User }) {
-  const queryClient = useQueryClient()
   const projectId = useProjectId()
   const project = useQuery({
     queryKey: ['project', projectId],
@@ -59,10 +59,6 @@ function Sidebar({ user }: { user: User }) {
     queryKey: ['label-stats', projectId],
     queryFn: () => api<LabelStats>(`/projects/${projectId}/label/stats`),
     enabled: !!projectId,
-  })
-  const logout = useMutation({
-    mutationFn: () => api('/auth/logout', { method: 'POST' }),
-    onSuccess: () => queryClient.clear(),
   })
   const toReview = stats.data?.counts.needs_review ?? 0
 
@@ -116,31 +112,15 @@ function Sidebar({ user }: { user: User }) {
         </>
       )}
 
-      <div className="mt-auto flex items-center gap-2.5 rounded-lg px-2 py-2">
-        <span className="grid size-7 place-items-center rounded-full bg-hover text-[11px] font-semibold text-ink">
-          {user.email.slice(0, 1).toUpperCase()}
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{user.email}</span>
-        <button
-          className="btn-ghost px-1.5 py-1.5"
-          aria-label="Sign out"
-          title="Sign out"
-          onClick={() => logout.mutate()}
-        >
-          <Icon name="log-out" size={15} />
-        </button>
+      <div className="mt-auto">
+        <AccountMenu user={user} showEmail up />
       </div>
     </aside>
   )
 }
 
 function TopBar({ user }: { user: User }) {
-  const queryClient = useQueryClient()
   const projectId = useProjectId()
-  const logout = useMutation({
-    mutationFn: () => api('/auth/logout', { method: 'POST' }),
-    onSuccess: () => queryClient.clear(),
-  })
   const { pathname } = useLocation()
   const project = useQuery({
     queryKey: ['project', projectId],
@@ -191,24 +171,7 @@ function TopBar({ user }: { user: User }) {
         >
           <Icon name="github" size={14} /> GitHub
         </a>
-        {!projectId && (
-          <>
-            <span
-              className="grid size-7 place-items-center rounded-full bg-hover text-[11px] font-semibold"
-              title={user.email}
-            >
-              {user.email.slice(0, 1).toUpperCase()}
-            </span>
-            <button
-              className="btn-ghost px-1.5 py-1.5"
-              aria-label="Sign out"
-              title="Sign out"
-              onClick={() => logout.mutate()}
-            >
-              <Icon name="log-out" size={15} />
-            </button>
-          </>
-        )}
+        {!projectId && <AccountMenu user={user} />}
       </div>
     </div>
   )
