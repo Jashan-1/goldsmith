@@ -15,6 +15,10 @@ make test
 make lint
 ```
 
+### Google sign-in
+
+Locally, `DEV_AUTH_BYPASS=true` signs you in as a fake dev user. For real Google sign-in, create an OAuth client (type "Web application") in Google Cloud Console, add `http://localhost:5173/api/auth/google/callback` as an authorised redirect URI, put the client ID and secret in `.env`, and set `DEV_AUTH_BYPASS=false`.
+
 ## Layout
 
 - `backend/`: Python 3.12, FastAPI, SQLAlchemy, Alembic

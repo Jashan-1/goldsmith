@@ -4,7 +4,10 @@ version = "0.1.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.20.1",
+    "authlib>=1.9.2",
     "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.6",
     "sqlalchemy>=2",
@@ -34,8 +37,10 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "mypy>=2.4.1",
     "pytest>=9.2.0",
     "ruff>=0.17.3",
 ]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.File", "fastapi.Form"]
