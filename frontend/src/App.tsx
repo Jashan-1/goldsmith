@@ -14,6 +14,7 @@ import SignInPage from './pages/SignInPage'
 
 export default function App() {
   const me = useQuery({ queryKey: ['me'], queryFn: () => api<User>('/auth/me') })
+  const projectId = useProjectId()
 
   if (me.isPending) return <Centered>Loading…</Centered>
   if (me.error instanceof ApiError && me.error.status === 401) return <SignInPage />
@@ -21,9 +22,10 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar user={me.data} />
+      {/* The sidebar holds a dataset's steps, so the home page doesn't need it. */}
+      {projectId && <Sidebar user={me.data} />}
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
+        <TopBar user={me.data} />
         <main className="min-w-0 flex-1">
           <Routes>
             <Route path="/projects/:projectId" element={<ProjectPage />}>
@@ -132,8 +134,13 @@ function Sidebar({ user }: { user: User }) {
   )
 }
 
-function TopBar() {
+function TopBar({ user }: { user: User }) {
+  const queryClient = useQueryClient()
   const projectId = useProjectId()
+  const logout = useMutation({
+    mutationFn: () => api('/auth/logout', { method: 'POST' }),
+    onSuccess: () => queryClient.clear(),
+  })
   const { pathname } = useLocation()
   const project = useQuery({
     queryKey: ['project', projectId],
@@ -146,12 +153,20 @@ function TopBar() {
   return (
     <div className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-line bg-canvas/85 px-6 backdrop-blur">
       <nav className="flex min-w-0 items-center gap-1.5 text-[13px] text-muted">
-        <Link to="/" className="md:hidden">
-          ✦
+        <Link
+          to="/"
+          className={`mr-2 flex items-center gap-2 text-[15px] font-semibold tracking-[-0.03em] text-ink ${projectId ? 'md:hidden' : ''}`}
+        >
+          <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-white">
+            ✦
+          </span>
+          {!projectId && 'Goldsmith'}
         </Link>
-        <Link to="/" className="hover:text-ink">
-          Datasets
-        </Link>
+        {projectId && (
+          <Link to="/" className="hover:text-ink">
+            Datasets
+          </Link>
+        )}
         {projectId && (
           <>
             <span className="text-faint">/</span>
@@ -167,14 +182,34 @@ function TopBar() {
           </>
         )}
       </nav>
-      <a
-        href="https://github.com/Jashan-1/goldsmith"
-        target="_blank"
-        rel="noreferrer"
-        className="btn-secondary px-3 py-1.5"
-      >
-        <Icon name="github" size={14} /> GitHub
-      </a>
+      <div className="flex items-center gap-2">
+        <a
+          href="https://github.com/Jashan-1/goldsmith"
+          target="_blank"
+          rel="noreferrer"
+          className="btn-secondary px-3 py-1.5"
+        >
+          <Icon name="github" size={14} /> GitHub
+        </a>
+        {!projectId && (
+          <>
+            <span
+              className="grid size-7 place-items-center rounded-full bg-hover text-[11px] font-semibold"
+              title={user.email}
+            >
+              {user.email.slice(0, 1).toUpperCase()}
+            </span>
+            <button
+              className="btn-ghost px-1.5 py-1.5"
+              aria-label="Sign out"
+              title="Sign out"
+              onClick={() => logout.mutate()}
+            >
+              <Icon name="log-out" size={15} />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }
