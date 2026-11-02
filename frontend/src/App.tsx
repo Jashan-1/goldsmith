@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Route, Routes } from 'react-router'
 import { api, ApiError, type User } from './api/client'
+import ProjectPage from './pages/ProjectPage'
 import ProjectsPage from './pages/ProjectsPage'
 import SignInPage from './pages/SignInPage'
 
@@ -27,8 +28,9 @@ export default function App() {
           </button>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-6 py-8">
+      <main className="mx-auto max-w-5xl px-6 py-8">
         <Routes>
+          <Route path="/projects/:projectId" element={<ProjectPage />} />
           <Route path="*" element={<ProjectsPage />} />
         </Routes>
       </main>

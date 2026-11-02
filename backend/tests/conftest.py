@@ -18,13 +18,23 @@ from sqlalchemy.orm import Session  # noqa: E402
 from alembic import command  # noqa: E402
 from goldsmith.api.deps import current_user  # noqa: E402
 from goldsmith.db import Base, SessionLocal  # noqa: E402
+from goldsmith.llm.provider import set_provider  # noqa: E402
 from goldsmith.main import create_app  # noqa: E402
 from goldsmith.models import User  # noqa: E402
+from tests.fake_provider import FakeProvider  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated() -> None:
     command.upgrade(Config(str(Path(__file__).parents[1] / "alembic.ini")), "head")
+
+
+@pytest.fixture(autouse=True)
+def fake_llm() -> Iterator[FakeProvider]:
+    fake = FakeProvider()
+    set_provider(fake)
+    yield fake
+    set_provider(None)
 
 
 @pytest.fixture

@@ -9,7 +9,11 @@ export class ApiError extends Error {
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     ...init,
-    headers: init?.body ? { 'Content-Type': 'application/json', ...init.headers } : init?.headers,
+    // FormData bodies set their own multipart Content-Type.
+    headers:
+      typeof init?.body === 'string'
+        ? { 'Content-Type': 'application/json', ...init.headers }
+        : init?.headers,
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
@@ -35,4 +39,45 @@ export interface Project {
   review_threshold: number
   created_at: string
   updated_at: string
+}
+
+export interface FieldMapping {
+  input: string[]
+  reference_output: string | null
+  metadata: string[]
+}
+
+export interface Upload {
+  id: string
+  filename: string
+  format: string
+  row_count: number
+  columns: string[]
+  preview: Record<string, unknown>[]
+  proposed_mapping: FieldMapping
+}
+
+export interface Job {
+  id: string
+  kind: string
+  status: 'queued' | 'running' | 'done' | 'failed'
+  progress: number
+  error: string | null
+}
+
+export interface Row {
+  id: string
+  row_index: number
+  input: Record<string, unknown>
+  reference_output: unknown
+  metadata: Record<string, unknown>
+  cluster_id: number | null
+  duplicate_of: string | null
+}
+
+export interface RowsPage {
+  items: Row[]
+  total: number
+  clusters: { cluster_id: number; count: number }[]
+  duplicates: number
 }

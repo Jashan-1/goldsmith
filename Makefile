@@ -14,10 +14,11 @@ setup:
 migrate:
 	$(UV) alembic upgrade head
 
-# Runs API and frontend together; Ctrl-C stops both.
+# Runs API, worker and frontend together; Ctrl-C stops all.
 dev:
 	trap 'kill 0' EXIT; \
 	($(UV) uvicorn goldsmith.main:app --reload --port 8000) & \
+	($(UV) python -m goldsmith.worker) & \
 	(cd frontend && npm run dev) & \
 	wait
 

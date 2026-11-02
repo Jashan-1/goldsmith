@@ -1,0 +1,9 @@
+{"prompt": "Summarise: The meeting moved to Thursday at 3pm.", "completion": "Meeting rescheduled to Thursday 3pm.", "source": "email"}
+{"prompt": "Summarise: Quarterly revenue grew 12% driven by new enterprise deals.", "completion": "Revenue up 12% from enterprise deals.", "source": "report"}
+{"prompt": "Summarise: The server outage lasted 40 minutes due to a bad config push.", "completion": "40-minute outage caused by a config push.", "source": "incident"}
+{"prompt": "Translate to French: Good morning", "completion": "Bonjour", "source": "translation"}
+{"prompt": "Translate to French: Thank you very much", "completion": "Merci beaucoup", "source": "translation"}
+{"prompt": "Translate to Spanish: Where is the station?", "completion": "¿Dónde está la estación?", "source": "translation"}
+
+{"prompt": "Write a haiku about autumn leaves", "completion": "Red leaves drift and fall / whispering to the cold ground / the year exhales slow", "source": "creative"}
+{"prompt": "Write a haiku about the sea", "completion": "Waves fold into foam / salt wind carries gull voices / the tide keeps its time", "source": "creative"}

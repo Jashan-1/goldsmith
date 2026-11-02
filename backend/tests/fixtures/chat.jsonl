@@ -1,0 +1,6 @@
+{"id": "c1", "messages": [{"role": "system", "content": "You are a helpful support agent."}, {"role": "user", "content": "My order is late."}, {"role": "assistant", "content": "Sorry about that. Can you share your order number?"}]}
+{"id": "c2", "messages": [{"role": "user", "content": "How do I cancel my plan?"}, {"role": "assistant", "content": "Go to Settings > Billing and choose Cancel plan."}]}
+{"id": "c3", "messages": [{"role": "user", "content": "Is there a student discount?"}, {"role": "assistant", "content": "Yes, students get 50% off with a valid school email."}]}
+{"id": "c4", "messages": [{"role": "user", "content": "The app keeps logging me out."}, {"role": "assistant", "content": "Try clearing the app cache. Which device are you on?"}, {"role": "user", "content": "iPhone 15."}, {"role": "assistant", "content": "Thanks. Please update to the latest version from the App Store."}]}
+{"id": "c5", "messages": [{"role": "user", "content": "Can I change my username?"}, {"role": "assistant", "content": "Usernames can be changed once every 30 days in Profile settings."}]}
+{"id": "c6", "messages": [{"role": "user", "content": "What payment methods do you accept?"}]}

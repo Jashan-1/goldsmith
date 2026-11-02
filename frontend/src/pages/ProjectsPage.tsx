@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { api, type Project, type TaskType } from '../api/client'
 
 const TASK_LABELS: Record<TaskType, string> = {
@@ -82,11 +83,16 @@ export default function ProjectsPage() {
         )}
         <ul className="divide-y divide-stone-200 rounded-lg border border-stone-200 bg-white">
           {projects.data?.map((p) => (
-            <li key={p.id} className="flex items-center justify-between px-4 py-3">
-              <span className="font-medium">{p.name}</span>
-              <span className="text-sm text-stone-500">
-                {TASK_LABELS[p.task_type]} · {p.status}
-              </span>
+            <li key={p.id}>
+              <Link
+                to={`/projects/${p.id}`}
+                className="flex items-center justify-between px-4 py-3 hover:bg-stone-50"
+              >
+                <span className="font-medium">{p.name}</span>
+                <span className="text-sm text-stone-500">
+                  {TASK_LABELS[p.task_type]} · {p.status}
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

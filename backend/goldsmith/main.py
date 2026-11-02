@@ -3,7 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.sessions import SessionMiddleware
 
-from goldsmith.api import auth, projects
+from goldsmith.api import auth, files, jobs, projects, rows
 from goldsmith.config import settings
 from goldsmith.db import engine
 
@@ -14,8 +14,8 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="Goldsmith")
     app.add_middleware(SessionMiddleware, secret_key=settings.session_secret, same_site="lax")
-    app.include_router(auth.router)
-    app.include_router(projects.router)
+    for module in (auth, projects, files, jobs, rows):
+        app.include_router(module.router)
 
     @app.get("/api/health")
     def health() -> dict[str, object]:

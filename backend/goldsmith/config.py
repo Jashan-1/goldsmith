@@ -20,6 +20,7 @@ class Settings:
     google_client_secret: str = field(default_factory=lambda: _env("GOOGLE_CLIENT_SECRET"))
     session_secret: str = field(default_factory=lambda: _env("SESSION_SECRET"))
     frontend_url: str = field(default_factory=lambda: _env("FRONTEND_URL", "http://localhost:5173"))
+    dedupe_threshold: float = field(default_factory=lambda: float(_env("DEDUPE_THRESHOLD", "0.97")))
     dev_auth_bypass: bool = field(
         default_factory=lambda: _env("DEV_AUTH_BYPASS", "false").lower() == "true"
     )

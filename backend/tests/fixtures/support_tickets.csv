@@ -1,0 +1,17 @@
+ticket_id,text,label,priority
+1,I was charged twice for my subscription this month,billing,high
+2,How do I update the credit card on my account?,billing,medium
+3,Can I get a refund for last month's charge?,billing,medium
+4,My invoice shows the wrong company name,billing,low
+5,My package has not arrived after two weeks,shipping,high
+6,Where can I track my order?,shipping,low
+7,The parcel arrived damaged and the box was crushed,shipping,high
+8,Can you ship to Canada?,shipping,low
+9,I can't log in even after resetting my password,account,high
+10,How do I enable two-factor authentication?,account,medium
+11,My account was locked after too many attempts,account,high
+12,How do I change the email address on my account?,account,low
+13,I was charged twice for my subscription this month,billing,high
+14,The app crashes when I open the settings page,bug,high
+15,Dark mode text is unreadable on the dashboard,bug,low
+16,Export to CSV produces an empty file,bug,medium

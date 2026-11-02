@@ -8,8 +8,12 @@ dependencies = [
     "fastapi>=0.162.0",
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
+    "numpy>=2.5.4",
+    "openai>=3.42.1",
     "pgvector>=0.5.1",
     "psycopg[binary]>=3.3.6",
+    "python-multipart>=0.0.33",
+    "scikit-learn>=1.9.1",
     "sqlalchemy>=2",
     "uvicorn[standard]>=0.54.0",
 ]
