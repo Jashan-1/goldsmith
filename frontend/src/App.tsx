@@ -171,9 +171,9 @@ function TopBar() {
         href="https://github.com/Jashan-1/goldsmith"
         target="_blank"
         rel="noreferrer"
-        className="text-[13px] text-muted hover:text-ink"
+        className="btn-secondary px-3 py-1.5"
       >
-        Docs
+        <Icon name="github" size={14} /> GitHub
       </a>
     </div>
   )
