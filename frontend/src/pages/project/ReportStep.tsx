@@ -42,7 +42,7 @@ export default function ReportStep() {
                 href={`/api/projects/${projectId}/export?format=${f}`}
                 className={f === 'jsonl' ? 'btn-primary' : 'btn-secondary'}
               >
-                <Icon name="cloud-upload" size={14} className="rotate-180" />
+                <Icon name="download" size={14} />
                 Export {f.toUpperCase()}
               </a>
             ))}
@@ -138,7 +138,7 @@ export default function ReportStep() {
                   key={c.cluster_id}
                   className="grid grid-cols-[72px_1fr_88px] items-center gap-3"
                 >
-                  <span className="text-[12px] text-muted">Cluster {c.cluster_id + 1}</span>
+                  <span className="text-[12px] text-muted">Cluster {c.cluster_id}</span>
                   <div className="relative h-5 overflow-hidden rounded-md bg-sunken">
                     <div
                       className="absolute inset-y-0 left-0 rounded-md bg-line-strong"

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { api, type RowsPage } from '../../api/client'
 import Icon from '../../components/Icon'
 import RowsTable from '../../components/RowsTable'
@@ -8,6 +9,13 @@ import { PageHeader } from '../../components/ui'
 
 export default function DataStep() {
   const { projectId = '' } = useParams()
+  // ?sample comes from the home page's "Try with sample data"; read once, then drop it
+  // so a refresh doesn't upload the sample again.
+  const [params, setParams] = useSearchParams()
+  const [autoSample] = useState(() => params.has('sample'))
+  useEffect(() => {
+    if (params.has('sample')) setParams({}, { replace: true })
+  }, [params, setParams])
   // Shares the rows table's first-page cache entry, so this costs no extra request.
   const rows = useQuery({
     queryKey: ['rows', projectId, '', 'include', '', 0],
@@ -31,7 +39,7 @@ export default function DataStep() {
           )
         }
       />
-      <UploadPanel projectId={projectId} compact={hasRows} />
+      <UploadPanel projectId={projectId} compact={hasRows} autoSample={autoSample} />
       {hasRows && (
         <section className="card p-4">
           <div className="grid grid-cols-3 rounded-xl bg-sunken">

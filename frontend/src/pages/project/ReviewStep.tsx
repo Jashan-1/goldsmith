@@ -193,7 +193,7 @@ export default function ReviewStep() {
             Relabelling similar rows with your instruction…
           </p>
         )}
-        <ul className="flex-1 overflow-y-auto">
+        <ul className="flex-1 overflow-y-auto empty:hidden">
           {items.map((r, i) => (
             <li key={r.id}>
               <button

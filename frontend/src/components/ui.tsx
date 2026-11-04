@@ -67,7 +67,7 @@ export function Badge({
     gold: 'bg-sunken text-ink',
     ok: 'bg-ok-soft text-ok',
     bad: 'bg-bad-soft text-bad',
-    dark: 'bg-ink text-white',
+    dark: 'bg-ink text-on-ink',
   }
   return (
     <span

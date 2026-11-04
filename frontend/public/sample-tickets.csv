@@ -1,0 +1,101 @@
+ticket_id,text,label,channel
+1,I was charged twice for my Starter plan subscription,billing,chat
+2,My Team plan order has not arrived after two weeks,shipping,phone
+3,I can't log in to Atlas after resetting my password,account,email
+4,The Nimbus app crashes when I open settings,bug,chat
+5,Please refund my last Starter plan payment,billing,phone
+6,Where can I track my Team plan delivery?,shipping,email
+7,How do I enable two-factor authentication on Atlas?,account,chat
+8,Dark mode text is unreadable in Nimbus,bug,phone
+9,My invoice for Starter plan shows the wrong amount,billing,email
+10,The Team plan parcel arrived damaged,shipping,chat
+11,My Atlas account was locked after too many attempts,account,phone
+12,Export to CSV produces an empty file in Nimbus,bug,email
+13,How do I change the card used for Starter plan?,billing,chat
+14,Can you ship Team plan to Canada?,shipping,phone
+15,How do I change the email on my Atlas account?,account,email
+16,The Nimbus search returns no results,bug,chat
+17,Why did my Starter plan price go up this month?,billing,phone
+18,My Team plan package says delivered but I never got it,shipping,email
+19,I never received the Atlas verification email,account,chat
+20,Images do not load in the Nimbus dashboard,bug,phone
+21,I cancelled Starter plan but was still billed,billing,email
+22,How long does Team plan express shipping take?,shipping,chat
+23,Can I merge two Atlas accounts?,account,phone
+24,The Nimbus save button does nothing,bug,email
+25,Can I get a receipt for my Starter plan purchase?,billing,chat
+26,Can I change the delivery address for my Team plan order?,shipping,phone
+27,How do I delete my Atlas account?,account,email
+28,Nimbus freezes when I upload a large file,bug,chat
+29,The Starter plan discount code was not applied,billing,phone
+30,The courier lost my Team plan shipment,shipping,email
+31,Someone else logged into my Atlas account,account,chat
+32,Notifications in Nimbus arrive twice,bug,phone
+33,I need a VAT invoice for Starter plan,billing,email
+34,Do you ship Team plan internationally?,shipping,chat
+35,I want to change my Atlas username,account,phone
+36,The Nimbus calendar shows the wrong time zone,bug,email
+37,My Starter plan payment failed but money left my account,billing,chat
+38,My Team plan order arrived with missing items,shipping,phone
+39,How do I add a team member to Atlas?,account,email
+40,Nimbus logs me out when I switch tabs,bug,chat
+41,How do I switch Starter plan to annual billing?,billing,phone
+42,Can I pick up my Team plan order in store?,shipping,email
+43,My Atlas session keeps logging me out,account,chat
+44,The Nimbus chart labels overlap,bug,phone
+45,I was billed for Starter plan after the free trial ended,billing,email
+46,The Team plan tracking number does not work,shipping,chat
+47,Can I sign in to Atlas with Google?,account,phone
+48,Copy and paste does not work in Nimbus,bug,email
+49,Can you split the Starter plan charge across two cards?,billing,chat
+50,Why is Team plan shipping so expensive?,shipping,phone
+51,I lost access to my Atlas authenticator app,account,email
+52,The Nimbus mobile app drains my battery,bug,chat
+53,The Starter plan charge appears in the wrong currency,billing,phone
+54,My Team plan order shipped to my old address,shipping,email
+55,How do I export my Atlas account data?,account,chat
+56,Nimbus shows an error 500 on the reports page,bug,phone
+57,Do you offer refunds on Starter plan upgrades?,billing,email
+58,Can Team plan be delivered on a weekend?,shipping,chat
+59,My Atlas profile picture will not update,account,phone
+60,The Nimbus sidebar disappears on small screens,bug,email
+61,My company needs a Starter plan quote before paying,billing,chat
+62,I received someone else's Team plan order,shipping,phone
+63,I forgot which email I used for Atlas,account,email
+64,Keyboard shortcuts stopped working in Nimbus,bug,chat
+65,I see an unknown charge labelled Starter plan,billing,phone
+66,The Team plan box was left in the rain,shipping,email
+67,How do I change my Atlas password?,account,chat
+68,The Nimbus PDF export cuts off the last page,bug,phone
+69,How do I download all my Starter plan invoices?,billing,email
+70,How do I return a Team plan item by post?,shipping,chat
+71,Can I transfer my Atlas account to a colleague?,account,phone
+72,Nimbus spell check underlines every word,bug,email
+73,Can I pay for Starter plan with PayPal?,billing,chat
+74,My Team plan delivery is stuck in customs,shipping,phone
+75,My Atlas account shows the wrong name,account,email
+76,The Nimbus filter resets when I refresh,bug,chat
+77,Tax was added twice to my Starter plan bill,billing,phone
+78,Can I combine two Team plan orders into one shipment?,shipping,email
+79,How do I turn off Atlas email notifications?,account,chat
+80,Drag and drop is broken in Nimbus,bug,phone
+81,I want to downgrade Starter plan and get prorated credit,billing,email
+82,The Team plan order was split into several parcels,shipping,chat
+83,I was removed from my Atlas team by mistake,account,phone
+84,Nimbus sends emails with broken links,bug,email
+85,My bank declined the Starter plan renewal,billing,chat
+86,Is Team plan shipping free over a certain amount?,shipping,phone
+87,My Atlas password reset link expired,account,email
+88,The Nimbus progress bar never finishes,bug,chat
+89,Is there a student price for Starter plan?,billing,phone
+90,"My Team plan order is delayed, when will it ship?",shipping,email
+91,How do I set up single sign-on for Atlas?,account,chat
+92,Sorting by date is wrong in Nimbus,bug,phone
+93,Please stop auto-renewal for Starter plan,billing,email
+94,Can I schedule a delivery time for Team plan?,shipping,chat
+95,Can I have two Atlas accounts with one email?,account,phone
+96,The Nimbus app will not open after the update,bug,email
+97,The Starter plan invoice is addressed to the wrong company,billing,chat
+98,The Team plan driver could not find my building,shipping,phone
+99,My Atlas account was suspended without warning,account,email
+100,Accented characters are garbled in Nimbus,bug,chat

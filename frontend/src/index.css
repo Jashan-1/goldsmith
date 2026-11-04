@@ -29,6 +29,32 @@
   --color-ok-soft: #e9f6ee;
   --color-bad: #d93036;
   --color-bad-soft: #fdeceb;
+  --color-on-ink: #ffffff; /* text on bg-ink */
+}
+
+/* Dark mode follows the OS setting; components only use the tokens above. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-canvas: #0b0b0b;
+    --color-sunken: #141414;
+    --color-surface: #171717;
+    --color-hover: #1f1f1f;
+    --color-line: #262626;
+    --color-line-strong: #363636;
+    --color-ink: #ededec;
+    --color-ink-soft: #d0d0ce;
+    --color-muted: #9b9b98;
+    --color-faint: #6c6c69;
+    --color-gold: #ededec;
+    --color-gold-soft: #1f1f1f;
+    --color-gold-line: #2a2a2a;
+    --color-ok: #3dbd6f;
+    --color-ok-soft: #10261a;
+    --color-bad: #f2555a;
+    --color-bad-soft: #2a1314;
+    --color-on-ink: #0a0a0a;
+  }
 }
 
 @layer base {
@@ -55,7 +81,7 @@
 
 /* Tailwind v4: shared classes are @utility blocks (@apply can't reference plain classes). */
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-[10px] bg-ink px-4 py-2.5 text-[13px] font-medium whitespace-nowrap text-white transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] bg-ink px-4 py-2.5 text-[13px] font-medium whitespace-nowrap text-on-ink transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-40;
 }
 @utility btn-secondary {
   @apply inline-flex items-center justify-center gap-2 rounded-[10px] border border-line bg-surface px-4 py-2.5 text-[13px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-40;

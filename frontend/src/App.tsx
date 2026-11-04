@@ -75,7 +75,7 @@ function Sidebar({ user }: { user: User }) {
         to="/"
         className="flex items-center gap-2 px-2 text-[15px] font-semibold tracking-[-0.03em]"
       >
-        <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-white">
+        <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-on-ink">
           ✦
         </span>
         Goldsmith
@@ -133,48 +133,72 @@ function TopBar({ user }: { user: User }) {
   const step = STEPS.find((s) => s.to === stepPath)
 
   return (
-    <div className="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-line bg-canvas/85 px-6 backdrop-blur">
-      <nav className="flex min-w-0 items-center gap-1.5 text-[13px] text-muted">
-        <Link
-          to="/"
-          className={`mr-2 flex items-center gap-2 text-[15px] font-semibold tracking-[-0.03em] text-ink ${projectId ? 'md:hidden' : ''}`}
-        >
-          <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-white">
-            ✦
-          </span>
-          {!projectId && 'Goldsmith'}
-        </Link>
-        {projectId && (
-          <Link to="/" className="hover:text-ink">
-            Datasets
+    <div className="sticky top-0 z-20 border-b border-line bg-canvas/85 backdrop-blur">
+      <div className="flex h-12 items-center justify-between px-6">
+        <nav className="flex min-w-0 items-center gap-1.5 text-[13px] whitespace-nowrap text-muted">
+          <Link
+            to="/"
+            className={`mr-2 flex items-center gap-2 text-[15px] font-semibold tracking-[-0.03em] text-ink ${projectId ? 'md:hidden' : ''}`}
+          >
+            <span className="grid size-6 place-items-center rounded-md bg-ink text-[13px] text-on-ink">
+              ✦
+            </span>
+            {!projectId && 'Goldsmith'}
           </Link>
-        )}
-        {projectId && (
-          <>
-            <span className="text-faint">/</span>
-            <Link to={`/projects/${projectId}`} className="truncate hover:text-ink">
-              {project.data?.name ?? '…'}
+          {projectId && (
+            <Link to="/" className="hover:text-ink">
+              Datasets
             </Link>
-            {step && (
-              <>
-                <span className="text-faint">/</span>
-                <span className="text-ink">{step.label}</span>
-              </>
-            )}
-          </>
-        )}
-      </nav>
-      <div className="flex items-center gap-2">
-        <a
-          href="https://github.com/Jashan-1/goldsmith"
-          target="_blank"
-          rel="noreferrer"
-          className="btn-secondary px-3 py-1.5"
-        >
-          <Icon name="github" size={14} /> GitHub
-        </a>
-        {!projectId && <AccountMenu user={user} />}
+          )}
+          {projectId && (
+            <>
+              <span className="text-faint">/</span>
+              <Link to={`/projects/${projectId}`} className="truncate hover:text-ink">
+                {project.data?.name ?? '…'}
+              </Link>
+              {step && (
+                <>
+                  <span className="text-faint">/</span>
+                  <span className="text-ink">{step.label}</span>
+                </>
+              )}
+            </>
+          )}
+        </nav>
+        <div className="flex items-center gap-2">
+          <a
+            href="https://github.com/Jashan-1/goldsmith"
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary px-3 py-1.5"
+          >
+            <Icon name="github" size={14} /> <span className="hidden sm:inline">GitHub</span>
+          </a>
+          {/* Inside a dataset the sidebar holds the account menu, except on phones. */}
+          <div className={projectId ? 'md:hidden' : ''}>
+            <AccountMenu user={user} />
+          </div>
+        </div>
       </div>
+      {/* Phones have no sidebar, so the dataset steps scroll along under the bar. */}
+      {projectId && (
+        <nav className="flex gap-1 overflow-x-auto px-4 pb-2 md:hidden">
+          {STEPS.map((s) => (
+            <NavLink
+              key={s.to}
+              to={`/projects/${projectId}${s.to ? `/${s.to}` : ''}`}
+              end={!s.to}
+              className={({ isActive }) =>
+                `shrink-0 rounded-full px-3 py-1 text-[12px] ${
+                  isActive ? 'bg-ink text-on-ink' : 'bg-sunken text-ink-soft'
+                }`
+              }
+            >
+              {s.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </div>
   )
 }

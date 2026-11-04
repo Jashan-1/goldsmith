@@ -35,6 +35,12 @@ const PATHS = {
       <path d="m8 17 4-4 4 4" />
     </>
   ),
+  download: (
+    <>
+      <path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />{' '}
+      <path d="m7 10 5 5 5-5" />
+    </>
+  ),
   database: (
     <>
       <ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 5V19A9 3 0 0 0 21 19V5" />{' '}

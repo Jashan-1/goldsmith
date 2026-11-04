@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, type FieldMapping, type Job, type Upload } from '../api/client'
 import { useJob } from '../lib/useJob'
 import Icon from './Icon'
@@ -9,9 +9,11 @@ import { ErrorText, Progress } from './ui'
 export default function UploadPanel({
   projectId,
   compact = false,
+  autoSample = false,
 }: {
   projectId: string
   compact?: boolean
+  autoSample?: boolean
 }) {
   const queryClient = useQueryClient()
   const [upload, setUpload] = useState<Upload | null>(null)
@@ -19,7 +21,13 @@ export default function UploadPanel({
   const [dragging, setDragging] = useState(false)
 
   const send = useMutation({
-    mutationFn: (file: File) => {
+    // null uploads the bundled 100-ticket sample.
+    mutationFn: async (file: File | null) => {
+      if (!file) {
+        const res = await fetch('/sample-tickets.csv')
+        if (!res.ok) throw new Error("Couldn't load the sample file.")
+        file = new File([await res.blob()], 'sample-tickets.csv', { type: 'text/csv' })
+      }
       const body = new FormData()
       body.append('file', file)
       return api<Upload>(`/projects/${projectId}/files`, { method: 'POST', body })
@@ -38,6 +46,15 @@ export default function UploadPanel({
       setJobId(job.id)
     },
   })
+
+  // Ref guard: StrictMode runs effects twice in dev, which would upload the sample twice.
+  const sampled = useRef(false)
+  useEffect(() => {
+    if (autoSample && !sampled.current) {
+      sampled.current = true
+      send.mutate(null)
+    }
+  }, [autoSample, send])
 
   const job = useJob(jobId)
   const status = job.data?.status
@@ -110,6 +127,19 @@ export default function UploadPanel({
           rows
         </p>
       </label>
+      {!compact && (
+        <p className="text-center text-[13px] text-muted">
+          No data handy?{' '}
+          <button
+            className="font-medium text-ink underline underline-offset-2 disabled:opacity-40"
+            disabled={send.isPending}
+            onClick={() => send.mutate(null)}
+          >
+            Try with sample data
+          </button>{' '}
+          (100 support tickets)
+        </p>
+      )}
       {send.error && <ErrorText>{send.error.message}</ErrorText>}
       {status === 'failed' && job.data && <ErrorText>Import failed: {job.data.error}</ErrorText>}
     </div>

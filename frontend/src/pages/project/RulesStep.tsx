@@ -99,7 +99,7 @@ function RulesEditor({ projectId, saved }: { projectId: string; saved: RuleSet }
                         ? k.value === 'guardrail'
                           ? 'bg-bad-soft text-bad'
                           : k.value === 'criterion'
-                            ? 'bg-ink text-white'
+                            ? 'bg-ink text-on-ink'
                             : 'bg-gold-soft text-gold'
                         : 'text-faint hover:bg-sunken hover:text-muted'
                     }`}

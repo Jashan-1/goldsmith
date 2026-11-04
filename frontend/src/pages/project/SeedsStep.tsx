@@ -177,7 +177,7 @@ function SeedCard({
                 disabled={save.isPending}
                 className={`rounded-full border px-3 py-1 text-[13px] transition-colors ${
                   saved === c
-                    ? 'border-ink bg-ink text-white'
+                    ? 'border-ink bg-ink text-on-ink'
                     : 'border-line bg-surface hover:border-line-strong'
                 }`}
                 onClick={() => {

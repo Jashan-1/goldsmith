@@ -34,10 +34,22 @@ export default function ProjectsPage() {
       navigate(`/projects/${project.id}`)
     },
   })
+  // A classification dataset that uploads the bundled tickets on arrival (see DataStep).
+  const sample = useMutation({
+    mutationFn: () =>
+      api<Project>('/projects', {
+        method: 'POST',
+        body: JSON.stringify({ name: 'Sample · support tickets', task_type: 'classification' }),
+      }),
+    onSuccess: (project) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      navigate(`/projects/${project.id}?sample=1`)
+    },
+  })
 
   return (
     <div className="mx-auto max-w-6xl px-6 pt-8 pb-20 md:px-10">
-      <section className="relative overflow-hidden rounded-[28px] border border-line bg-[radial-gradient(120%_90%_at_50%_0%,#ffffff_0%,#f4f3ef_55%,#ebe8e1_100%)] px-6 pt-16 pb-0 text-center md:px-12">
+      <section className="relative overflow-hidden rounded-[28px] border border-line bg-[radial-gradient(120%_90%_at_50%_0%,#ffffff_0%,#f4f3ef_55%,#ebe8e1_100%)] dark:bg-[radial-gradient(120%_90%_at_50%_0%,#1c1c1b_0%,#121212_55%,#0b0b0b_100%)] px-6 pt-16 pb-0 text-center md:px-12">
         <a
           href="https://github.com/Jashan-1/goldsmith"
           target="_blank"
@@ -62,6 +74,14 @@ export default function ProjectsPage() {
             onClick={() => document.getElementById('project-name')?.focus()}
           >
             New dataset <Icon name="chevron-right" size={14} />
+          </button>
+          <button
+            className="btn-secondary px-5 py-3 text-[14px]"
+            disabled={sample.isPending}
+            onClick={() => sample.mutate()}
+          >
+            <Icon name="sparkles" size={14} />
+            {sample.isPending ? 'Creating…' : 'Try with sample data'}
           </button>
           <a
             href="https://github.com/Jashan-1/goldsmith"
@@ -107,7 +127,7 @@ export default function ProjectsPage() {
                 Differs from the label in your file (&ldquo;shipping&rdquo;)
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 pb-5">
-                <span className="rounded-full bg-ink py-2 text-center text-[12px] font-medium text-white">
+                <span className="rounded-full bg-ink py-2 text-center text-[12px] font-medium text-on-ink">
                   Approve label
                 </span>
                 <span className="rounded-full border border-line py-2 text-center text-[12px] font-medium">
@@ -127,7 +147,7 @@ export default function ProjectsPage() {
       <section className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Featured card: create */}
         <form
-          className="flex flex-col rounded-[18px] bg-ink p-6 text-white"
+          className="flex flex-col rounded-[18px] bg-[#0a0a0a] p-6 text-white ring-1 ring-white/10 dark:bg-[#1a1a19]"
           onSubmit={(e) => {
             e.preventDefault()
             if (name.trim()) create.mutate()
@@ -174,7 +194,7 @@ export default function ProjectsPage() {
             ))}
           </ul>
           <button
-            className="mt-auto rounded-[10px] bg-white py-2.5 text-[13px] font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="mt-auto rounded-[10px] bg-white py-2.5 text-[13px] font-medium text-[#0a0a0a] transition-opacity hover:opacity-90 disabled:opacity-40"
             style={{ marginTop: 24 }}
             disabled={!name.trim() || create.isPending}
           >

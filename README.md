@@ -4,12 +4,25 @@ Human-in-the-loop builder for golden LLM eval datasets. Label 10 rows, review on
 
 > Early development, built in public.
 
+![Goldsmith's report page: row counts, review change rate, label sources, audit estimate and export buttons](docs/screenshot-report.png)
+
+## How it works
+
+1. **Upload** a CSV or JSONL file (classification, Q&A or chat). Near-duplicates are removed and similar rows are grouped into clusters.
+2. **Write guidelines** and **label about 10 seed rows**, picked to cover every cluster.
+3. **Label the dataset.** An LLM labels every row and scores how unsure it is (samples that disagree, rule concerns, rows unlike anything a human labelled, a mismatch with a label already in your file).
+4. **Review** only the rows above your threshold. Approve, reject, edit, or give an instruction and apply it to similar rows. Every correction is reused as context for later labelling.
+5. **Report and export.** See what changed, run a 10-row audit of auto-accepted rows for an honest quality estimate, and download JSONL or CSV (zipped with a `manifest.json`).
+
+No data handy? Click **Try with sample data** on the home page to load 100 support tickets.
+
 ## Quickstart
 
 Requirements: [uv](https://docs.astral.sh/uv/), Node 20+, PostgreSQL with the [pgvector](https://github.com/pgvector/pgvector) extension (for example `brew install postgresql@15 pgvector`).
 
 ```sh
 make setup   # creates .env, databases, installs deps, runs migrations
+# then set OPENAI_API_KEY in .env (OPENAI_MODEL is gpt-4o-mini by default)
 make dev     # API on :8000, app on http://localhost:5173
 make test
 make lint
