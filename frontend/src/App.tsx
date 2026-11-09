@@ -20,7 +20,7 @@ export default function App() {
 
   if (me.isPending) return <Centered>Loading…</Centered>
   if (me.error instanceof ApiError && me.error.status === 401) return <SignInPage />
-  if (me.error) return <Centered>Can't reach the API: {me.error.message}</Centered>
+  if (me.error) return <Centered>{me.error.message}</Centered>
 
   return (
     <div className="flex min-h-screen">

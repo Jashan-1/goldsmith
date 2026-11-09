@@ -14,6 +14,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       typeof init?.body === 'string'
         ? { 'Content-Type': 'application/json', ...init.headers }
         : init?.headers,
+  }).catch(() => {
+    // fetch only rejects when the server can't be reached at all.
+    throw new ApiError(0, "Can't reach the Goldsmith server. Is `make dev` running?")
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
