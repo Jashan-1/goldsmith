@@ -11,7 +11,7 @@ Human-in-the-loop builder for golden LLM eval datasets. Label 10 rows, review on
 1. **Upload** a CSV or JSONL file (classification, Q&A or chat). Near-duplicates are removed and similar rows are grouped into clusters.
 2. **Write guidelines** and **label about 10 seed rows**, picked to cover every cluster.
 3. **Label the dataset.** An LLM labels every row and scores how unsure it is (samples that disagree, rule concerns, rows unlike anything a human labelled, a mismatch with a label already in your file). For Q&A and chat, turn on **Best of 3** and a judge picks the strongest of the sampled answers; a low judge score sends the row to review.
-4. **Review** only the rows above your threshold. Approve, reject, edit, or give an instruction and apply it to similar rows. Every correction is reused as context for later labelling.
+4. **Review** only the rows above your threshold. Approve, reject, edit, press **Suggest fix** to have the model repair the problems it flagged, or give an instruction and apply it to similar rows. Every correction is reused as context for later labelling.
 5. **Report and export.** See what changed, run a 10-row audit of auto-accepted rows for an honest quality estimate, and download JSONL or CSV (zipped with a `manifest.json`).
 
 No data handy? Click **Try with sample data** on the home page to load 100 support tickets.
@@ -28,6 +28,16 @@ make test
 make lint
 ```
 
+### Benchmark
+
+Measure how well the review queue finds the model's mistakes on a file that already has human labels (classification only for now):
+
+```sh
+cd backend && uv run --env-file ../.env python -m goldsmith.bench my_labelled.csv --gold label --budget 20
+```
+
+The gold column is hidden from the model. The 10 seeds are labelled from it, and the rest of the file is labelled once. The script then compares three ways of spending the same review budget: Goldsmith's queue (most uncertain rows first), random review, and no review. It prints the accuracy of each as JSON. The run is saved as a project under a `bench@goldsmith.local` user.
+
 ### Google sign-in
 
 Locally, `DEV_AUTH_BYPASS=true` signs you in as a fake dev user. For real Google sign-in, create an OAuth client (type "Web application") in Google Cloud Console, add `http://localhost:5173/api/auth/google/callback` as an authorised redirect URI, put the client ID and secret in `.env`, and set `DEV_AUTH_BYPASS=false`.
@@ -40,6 +50,8 @@ Locally, `DEV_AUTH_BYPASS=true` signs you in as a fake dev user. For real Google
 ## Credits
 
 Goldsmith learns from these open-source projects: [DeepEval](https://github.com/confident-ai/deepeval), [distilabel](https://github.com/argilla-io/distilabel) and [Argilla](https://github.com/argilla-io/argilla), [Langfuse](https://github.com/langfuse/langfuse) and [Kiln](https://github.com/Kiln-AI/Kiln).
+
+Two ideas come from papers, with no code copied: the benchmark's fixed task, fixed budget setup follows [FT-Dojo](https://arxiv.org/abs/2603.01712), and **Suggest fix** follows [AutoSFT](https://arxiv.org/abs/2610.22194) in repairing flagged rows instead of only dropping them.
 
 ### Code and prompts adapted from other projects
 

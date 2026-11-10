@@ -1,7 +1,8 @@
 import type { LabelInfo, Rule } from '../api/client'
 
 export type Mode = 'idle' | 'edit' | 'preview'
-export type KeyAction = 'approve' | 'reject' | 'edit' | 'submit' | 'cancel' | 'next' | 'prev' | null
+export type KeyAction =
+  'approve' | 'reject' | 'edit' | 'fix' | 'submit' | 'cancel' | 'next' | 'prev' | null
 
 /** Keyboard map for the review card. `inText` = focus is in a text field. */
 export function keyAction(key: string, shift: boolean, inText: boolean, mode: Mode): KeyAction {
@@ -13,6 +14,7 @@ export function keyAction(key: string, shift: boolean, inText: boolean, mode: Mo
     a: 'approve',
     r: 'reject',
     e: 'edit',
+    f: 'fix',
     j: 'next',
     arrowdown: 'next',
     k: 'prev',
@@ -72,4 +74,13 @@ export function whyReasons(
   if (reasons.length === 0 && label.uncertainty != null)
     reasons.push(`Uncertainty ${label.uncertainty.toFixed(2)} is above your threshold`)
   return reasons
+}
+
+/** Instruction asking the model to repair a flagged label (AutoSFT-style repair, not drop). */
+export function fixInstruction(reasons: string[]): string {
+  return [
+    'Repair the current label so an expert reviewer would accept it. Problems found:',
+    ...reasons.map((r) => `- ${r}`),
+    'Change only what these problems need. If the label is already right, return it unchanged.',
+  ].join('\n')
 }

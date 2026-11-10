@@ -1,11 +1,12 @@
 import { expect, test } from 'vitest'
 import type { LabelInfo } from '../api/client'
-import { keyAction, whyReasons } from './review'
+import { fixInstruction, keyAction, whyReasons } from './review'
 
 test('shortcuts act only when not typing', () => {
   expect(keyAction('a', false, false, 'idle')).toBe('approve')
   expect(keyAction('R', false, false, 'idle')).toBe('reject')
   expect(keyAction('e', false, false, 'idle')).toBe('edit')
+  expect(keyAction('f', false, false, 'idle')).toBe('fix')
   expect(keyAction('a', false, true, 'idle')).toBeNull() // typing an instruction
   expect(keyAction('a', false, false, 'preview')).toBeNull()
 })
@@ -69,5 +70,15 @@ test('why reasons fall back to the score', () => {
   ])
   expect(whyReasons(label({ signals: { reference: 0.9 } }), [], 'x', false)[0]).toBe(
     'Differs from the reference answer in your file',
+  )
+})
+
+test('fix instruction lists every problem', () => {
+  const text = fixInstruction([
+    'Differs from the reference answer in your file',
+    'Possible guardrail issue: no PII',
+  ])
+  expect(text).toContain(
+    '- Differs from the reference answer in your file\n- Possible guardrail issue: no PII',
   )
 })

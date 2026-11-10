@@ -12,7 +12,7 @@ import {
 } from '../../api/client'
 import Icon, { type IconName } from '../../components/Icon'
 import { Badge, EmptyState, ErrorText } from '../../components/ui'
-import { keyAction, whyReasons, type Mode } from '../../lib/review'
+import { fixInstruction, keyAction, whyReasons, type Mode } from '../../lib/review'
 import { inputText, STATUS, valueText } from '../../lib/rows'
 import { useJob } from '../../lib/useJob'
 
@@ -545,6 +545,8 @@ function Card({
     null,
   )
   const [applySimilar, setApplySimilar] = useState(false)
+  // A suggested fix is saved as a plain edit: its instruction is generated, not a reviewer lesson.
+  const [isFix, setIsFix] = useState(false)
   const editRef = useRef<HTMLTextAreaElement>(null)
   const base = `/projects/${projectId}/review/${row.id}`
   const seconds = () => Math.round((Date.now() - shownAt.current) / 1000)
@@ -558,17 +560,19 @@ function Card({
     onSuccess: onDone,
   })
   const instruct = useMutation({
-    mutationFn: () =>
+    mutationFn: (text: string) =>
       api<{ expected_output: string; rationale: string }>(`${base}/instruct`, {
         method: 'POST',
-        body: JSON.stringify({ instruction: instruction.trim() }),
+        body: JSON.stringify({ instruction: text }),
       }),
-    onSuccess: (p) => {
+    onSuccess: (p, text) => {
       setPreview(p)
+      setIsFix(text !== instruction.trim())
       setMode('preview')
     },
   })
   const busy = submit.isPending || instruct.isPending
+  const reasons = whyReasons(label, rules, row.reference_output, isClassification)
 
   // One handler for buttons and keys, so both stay in sync.
   const run = (action: ReturnType<typeof keyAction>, from: 'edit' | 'instruction' | null) => {
@@ -584,8 +588,11 @@ function Card({
     } else if (action === 'cancel') {
       setMode('idle')
       setPreview(null)
-    } else if (action === 'submit') {
-      if (mode === 'preview' && preview)
+    } else if (action === 'fix') instruct.mutate(fixInstruction(reasons))
+    else if (action === 'submit') {
+      if (mode === 'preview' && preview && isFix)
+        submit.mutate({ action: 'edit', expected_output: preview.expected_output })
+      else if (mode === 'preview' && preview)
         submit.mutate({
           action: 'instruction',
           instruction: instruction.trim(),
@@ -594,7 +601,7 @@ function Card({
         })
       else if (from === 'edit' && edit.trim())
         submit.mutate({ action: 'edit', expected_output: edit.trim() })
-      else if (from === 'instruction' && instruction.trim()) instruct.mutate()
+      else if (from === 'instruction' && instruction.trim()) instruct.mutate(instruction.trim())
     }
   }
 
@@ -623,7 +630,6 @@ function Card({
     }
   }
 
-  const reasons = whyReasons(label, rules, row.reference_output, isClassification)
   const b = (label.uncertainty_breakdown ?? {}) as {
     samples?: unknown[]
     stated_confidence?: number
@@ -752,20 +758,24 @@ function Card({
           )}
           {mode === 'preview' && preview && (
             <div className="rounded-2xl border border-line bg-sunken/60 p-4 text-[13px]">
-              <p className="text-[12px] font-medium text-muted">Suggested new version</p>
+              <p className="text-[12px] font-medium text-muted">
+                {isFix ? 'Suggested fix' : 'Suggested new version'}
+              </p>
               <p className="mt-1 text-[15px] font-semibold whitespace-pre-line">
                 {preview.expected_output}
               </p>
               <p className="mt-1 text-muted">{preview.rationale}</p>
-              <label className="mt-3 flex cursor-pointer items-center gap-2 text-ink-soft">
-                <input
-                  type="checkbox"
-                  className="accent-ink"
-                  checked={applySimilar}
-                  onChange={(e) => setApplySimilar(e.target.checked)}
-                />
-                Also apply this to the 10 most similar unreviewed rows
-              </label>
+              {!isFix && (
+                <label className="mt-3 flex cursor-pointer items-center gap-2 text-ink-soft">
+                  <input
+                    type="checkbox"
+                    className="accent-ink"
+                    checked={applySimilar}
+                    onChange={(e) => setApplySimilar(e.target.checked)}
+                  />
+                  Also apply this to the 10 most similar unreviewed rows
+                </label>
+              )}
             </div>
           )}
 
@@ -826,6 +836,14 @@ function Card({
                   disabled={busy}
                 >
                   <Icon name="pencil" size={13} /> Edit <kbd className="kbd">E</kbd>
+                </button>
+                <button
+                  className="btn-secondary rounded-full"
+                  onClick={() => run('fix', null)}
+                  disabled={busy}
+                  title="Ask the model to repair the problems listed above"
+                >
+                  <Icon name="sparkles" size={13} /> Suggest fix <kbd className="kbd">F</kbd>
                 </button>
                 <div className="relative flex-1">
                   <Icon
