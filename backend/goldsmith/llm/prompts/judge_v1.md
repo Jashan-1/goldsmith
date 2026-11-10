@@ -9,6 +9,6 @@ $rules
 $examples
 
 ## Output
-- `best`: the number of the best candidate (1-based).
-- `score`: your probability (0 to 1) that the human expert would accept the best candidate unchanged. Score low when every candidate is wrong, incomplete or breaks a rule.
-- `reason`: one sentence on why it is the best, or what is still wrong with it.
+- `reason`: first compare the candidates against the rules and examples, in one or two sentences, and name the best one.
+- `best`: the number of the candidate your reason named (1-based).
+- `score`: your probability (0 to 1) that the human expert would accept that candidate unchanged. Score low when the candidates disagree on a fact you cannot verify from the rules or examples, or when every candidate is wrong, incomplete or breaks a rule.

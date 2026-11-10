@@ -45,9 +45,10 @@ class LabellingError(RuntimeError):
 
 
 class JudgeOutput(BaseModel):
+    # Field order matters: structured output is generated in order, so reasoning comes first.
+    reason: str
     best: int
     score: float
-    reason: str
 
 
 class LabelOutput(BaseModel):
