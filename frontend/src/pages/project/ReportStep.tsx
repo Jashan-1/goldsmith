@@ -75,6 +75,9 @@ export default function ReportStep() {
                   ['Edited', s.edited ?? 0],
                   ['Rejected', s.rejected ?? 0],
                   ['Unlabelled', r.unlabelled],
+                  ...(r.judge.rows
+                    ? [['Avg judge score (best of 3)', pct(r.judge.mean_score)]]
+                    : []),
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between py-2">
                     <dt className="text-muted">{k}</dt>

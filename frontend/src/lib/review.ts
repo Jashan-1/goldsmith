@@ -27,6 +27,7 @@ interface Breakdown {
   rule_concerns?: string[]
   stated_confidence?: number
   audit?: number
+  judge?: { best: number; score: number; reason: string }
 }
 
 /** Plain-language reasons a row was sent to review, strongest first. */
@@ -60,6 +61,10 @@ export function whyReasons(
     const rule = rules.find((r) => r.id === id)
     reasons.push(`Possible ${rule?.kind ?? 'rule'} issue: ${rule?.text ?? id}`)
   }
+  if (b.judge && b.judge.score < 0.6)
+    reasons.push(
+      `Judge gave the best answer ${Math.round(b.judge.score * 100)}%: ${b.judge.reason}`,
+    )
   if ((s.novelty ?? 0) >= 0.8) reasons.push('Unlike the rows a human has labelled so far')
   if (b.stated_confidence != null && b.stated_confidence < 0.6)
     reasons.push(`Model was only ${Math.round(b.stated_confidence * 100)}% confident`)

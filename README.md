@@ -10,7 +10,7 @@ Human-in-the-loop builder for golden LLM eval datasets. Label 10 rows, review on
 
 1. **Upload** a CSV or JSONL file (classification, Q&A or chat). Near-duplicates are removed and similar rows are grouped into clusters.
 2. **Write guidelines** and **label about 10 seed rows**, picked to cover every cluster.
-3. **Label the dataset.** An LLM labels every row and scores how unsure it is (samples that disagree, rule concerns, rows unlike anything a human labelled, a mismatch with a label already in your file).
+3. **Label the dataset.** An LLM labels every row and scores how unsure it is (samples that disagree, rule concerns, rows unlike anything a human labelled, a mismatch with a label already in your file). For Q&A and chat, turn on **Best of 3** and a judge picks the strongest of the sampled answers; a low judge score sends the row to review.
 4. **Review** only the rows above your threshold. Approve, reject, edit, or give an instruction and apply it to similar rows. Every correction is reused as context for later labelling.
 5. **Report and export.** See what changed, run a 10-row audit of auto-accepted rows for an honest quality estimate, and download JSONL or CSV (zipped with a `manifest.json`).
 

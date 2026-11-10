@@ -34,7 +34,7 @@ def start_labelling(
     )
     if running:
         raise HTTPException(409, "A labelling job is already running for this project.")
-    job = Job(project_id=project.id, kind="label", payload={"cheap": (body or LabelIn()).cheap})
+    job = Job(project_id=project.id, kind="label", payload=(body or LabelIn()).model_dump())
     db.add(job)
     db.commit()
     return job

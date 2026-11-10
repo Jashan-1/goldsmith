@@ -30,6 +30,7 @@ from goldsmith.models import Correction, Job, Label, Project, Row
 HUMAN_SOURCES = ("human_seed", "human_review")
 DECIDABLE = ("auto_accepted", "needs_review")  # statuses the threshold may flip
 PROMPT_NAME = "label_v1"
+JUDGE_PROMPT = "judge_v1"
 
 TASK_INSTRUCTIONS = {
     "classification": "Choose the single best label for the row from: $labels. "
@@ -41,6 +42,12 @@ TASK_INSTRUCTIONS = {
 
 class LabellingError(RuntimeError):
     pass
+
+
+class JudgeOutput(BaseModel):
+    best: int
+    score: float
+    reason: str
 
 
 class LabelOutput(BaseModel):
@@ -65,6 +72,8 @@ class RowResult:
     outputs: list[LabelOutput] = field(default_factory=list)
     disagreement: float | None = None
     reference: float | None = None  # disagreement with the reference already in the upload
+    chosen: int = 0  # index of the output used as the label (best-of-k may pick a later one)
+    judge: JudgeOutput | None = None
     error: str | None = None
 
 
@@ -75,7 +84,11 @@ def _reference_text(value: Any) -> str | None:
 
 
 def build_instructions(
-    task_type: str, rules: list[dict[str, Any]], seeds: list[tuple[Row, Any]], labels: list[str]
+    task_type: str,
+    rules: list[dict[str, Any]],
+    seeds: list[tuple[Row, Any]],
+    labels: list[str],
+    prompt: str = PROMPT_NAME,
 ) -> str:
     rule_lines = "\n".join(f"- [{r['id']}] ({r['kind']}) {r['text']}" for r in rules)
     examples = "\n\n".join(
@@ -83,7 +96,7 @@ def build_instructions(
         for i, (row, output) in enumerate(seeds, start=1)
     )
     task = Template(TASK_INSTRUCTIONS[task_type]).safe_substitute(labels=", ".join(labels))
-    return Template(load_prompt(PROMPT_NAME)).substitute(
+    return Template(load_prompt(prompt)).substitute(
         task_instruction=task,
         rules=rule_lines or "(no rules yet)",
         examples=examples,
@@ -138,6 +151,7 @@ class LabelContext:
     schema: type[LabelOutput]
     rule_set_version: int
     is_classification: bool
+    judge_instructions: str
 
 
 def labelling_context(db: Session, project: Project) -> LabelContext:
@@ -153,12 +167,12 @@ def labelling_context(db: Session, project: Project) -> LabelContext:
     rule_set = current_rule_set(db, project.id)
     is_classification = project.task_type == "classification"
     labels = sorted({str(out) for _, out in seeds}) if is_classification else []
+    rules = rule_set.rules if rule_set else []
+    examples = [(r, o) for r, o in seeds]
     return LabelContext(
-        instructions=build_instructions(
-            project.task_type,
-            rule_set.rules if rule_set else [],
-            [(r, o) for r, o in seeds],
-            labels,
+        instructions=build_instructions(project.task_type, rules, examples, labels),
+        judge_instructions=build_instructions(
+            project.task_type, rules, examples, labels, prompt=JUDGE_PROMPT
         ),
         schema=label_schema(labels or None),
         rule_set_version=rule_set.version if rule_set else 0,
@@ -174,6 +188,7 @@ def _label_one(
     schema: type[LabelOutput],
     samples: int,
     is_classification: bool,
+    judge_instructions: str | None = None,
 ) -> RowResult:
     result = RowResult(row)
     try:
@@ -184,6 +199,18 @@ def _label_one(
             for _ in range(samples - 1)
         ]
         texts = [o.expected_output for o in result.outputs]
+        if judge_instructions and len(texts) > 1:
+            # Best-of-k: a judge picks the strongest sample and scores it.
+            candidates = "\n\n".join(f"### Candidate {i}\n{t}" for i, t in enumerate(texts, 1))
+            judge = provider.structured(
+                judge_instructions,
+                f"{message}\n\n## Candidates\n{candidates}",
+                JudgeOutput,
+                temperature=0,
+            )
+            judge.best = min(len(texts), max(1, judge.best))
+            judge.score = min(1.0, max(0.0, judge.score))
+            result.judge, result.chosen = judge, judge.best - 1
         ref = _reference_text(row.reference_output)
         if is_classification:
             if samples > 1:
@@ -196,7 +223,7 @@ def _label_one(
             if samples > 1:
                 result.disagreement = text_disagreement(vectors[:samples])
             if ref is not None:
-                result.reference = text_disagreement(vectors[[0, -1]])
+                result.reference = text_disagreement(vectors[[result.chosen, -1]])
     except Exception as e:  # one bad row shouldn't sink the whole job
         result.error = str(e) or type(e).__name__
     return result
@@ -221,6 +248,8 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
     project = db.get_one(Project, job.project_id)
     samples = 1 if job.payload.get("cheap") else max(1, settings.label_samples)
     ctx = labelling_context(db, project)
+    # Best-of-k only means something for free text with more than one sample.
+    best_of = bool(job.payload.get("best_of")) and not ctx.is_classification and samples > 1
 
     targets = rows_to_label(db, project.id, job.payload.get("row_ids"))
     if not targets:
@@ -247,6 +276,7 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
                 ctx.schema,
                 samples,
                 ctx.is_classification,
+                ctx.judge_instructions if best_of else None,
             )
             for row in targets
         ]
@@ -271,7 +301,7 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
         .values(is_current=False)
     )
     for result, nov in zip(ok, novelty, strict=True):
-        first = result.outputs[0]
+        first = result.outputs[result.chosen]
         confidence = min(1.0, max(0.0, first.confidence))
         signals = {
             "reference": result.reference,
@@ -279,6 +309,7 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
             "rule_concerns": 1.0 if first.rule_concerns else 0.0,
             "novelty": nov,
             "confidence": 1 - confidence,
+            "judge": 1 - result.judge.score if result.judge else None,
         }
         uncertainty = combine(signals, weights)
         db.add(
@@ -298,6 +329,11 @@ def run_labelling(db: Session, job: Job, progress: Callable[[int], None]) -> Non
                     "rules_applied": first.rules_applied,
                     "rule_concerns": first.rule_concerns,
                     "prompt": PROMPT_NAME,
+                    **(
+                        {"judge": result.judge.model_dump(), "chosen": result.chosen}
+                        if result.judge
+                        else {}
+                    ),
                 },
             )
         )

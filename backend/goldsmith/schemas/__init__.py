@@ -115,6 +115,7 @@ class SeedOut(BaseModel):
 
 class LabelIn(BaseModel):
     cheap: bool = False  # 1 sample, no self-disagreement
+    best_of: bool = False  # text tasks: a judge picks the best sample and scores it
 
 
 class LabelInfo(BaseModel):

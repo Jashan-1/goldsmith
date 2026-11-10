@@ -131,6 +131,7 @@ export interface Report {
   human_minutes: number
   coverage: { cluster_id: number; rows: number; human: number; flagged: boolean }[]
   audit: { sampled: number; reviewed: number; changed: number }
+  judge: { rows: number; mean_score: number | null }
 }
 
 export interface ReviewCard {

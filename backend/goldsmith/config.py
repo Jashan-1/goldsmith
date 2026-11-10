@@ -35,7 +35,7 @@ class Settings:
             _env(
                 "UNCERTAINTY_WEIGHTS",
                 '{"reference": 0.8, "disagreement": 0.7, "rule_concerns": 0.6,'
-                ' "novelty": 0.4, "confidence": 0.3}',
+                ' "novelty": 0.4, "confidence": 0.3, "judge": 0.7}',
             )
         )
     )

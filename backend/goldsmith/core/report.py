@@ -75,6 +75,11 @@ def build_report(db: Session, project: Project) -> dict[str, Any]:
         for cid, c in sorted(clusters.items())
     ]
 
+    judged = [
+        (lab.uncertainty_breakdown or {})["judge"]["score"]
+        for lab in labels
+        if (lab.uncertainty_breakdown or {}).get("judge")
+    ]
     audit = [lab for lab in labels if _is_audit(lab)]
     audit_done = [lab for lab in audit if lab.source == "human_review"]
     return {
@@ -87,6 +92,7 @@ def build_report(db: Session, project: Project) -> dict[str, Any]:
         "review_rate": changed / len(reviewed) if reviewed else None,
         "human_minutes": round((seconds or 0) / 60, 1),
         "coverage": coverage,
+        "judge": {"rows": len(judged), "mean_score": sum(judged) / len(judged) if judged else None},
         "audit": {
             "sampled": len(audit),
             "reviewed": len(audit_done),

@@ -30,7 +30,7 @@ def test_audit_report_and_export(client: TestClient, labelled_project: str):
 
     rep = client.get(f"/api/projects/{pid}/report").json()
     assert rep["audit"] == {"sampled": 10, "reviewed": 10, "changed": 2}
-    assert rep["reviewed"] == 10
+    assert rep["reviewed"] == 10 and rep["judge"] == {"rows": 0, "mean_score": None}
     assert rep["review_rate"] == 0.2
     assert rep["human_minutes"] == 5.0
     assert rep["status"]["rejected"] == 1 and rep["status"]["approved"] == 8

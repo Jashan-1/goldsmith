@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from goldsmith.core.labelling import build_instructions, label_schema
 from goldsmith.models import Correction, Label, Row, User
+from goldsmith.worker.runner import run_next
 from tests.helpers import fake_label, ingest, new_project, row_of, run_label_job
 
 
@@ -48,6 +49,7 @@ def test_labels_100_rows_end_to_end(client: TestClient, labelled_project: str, f
         b = label["uncertainty_breakdown"]
         assert set(b["signals"]) == {
             "reference",
+            "judge",
             "disagreement",
             "rule_concerns",
             "novelty",
@@ -218,3 +220,41 @@ def test_text_tasks_compare_with_reference_by_embedding(client, fake_llm):
     }
     assert refs.get("What is the refund window?", 0) == 0  # identical answer (unless it's a seed)
     assert max(refs.values()) == 1.0  # "I am not sure." vs a real answer
+
+
+def test_best_of_k_uses_judge_pick_and_score(client, fake_llm, monkeypatch):
+    """Text tasks: the judge's chosen sample becomes the label; a low score flags the row."""
+    from goldsmith.config import settings
+
+    monkeypatch.setattr(settings, "label_samples", 3)
+    fake_llm.responses["LabelOutput"] = lambda user, t: {
+        "expected_output": "cold answer" if t == 0 else "warm answer",
+        "rationale": "r",
+        "rules_applied": [],
+        "rule_concerns": [],
+        "confidence": 0.95,
+    }
+    fake_llm.responses["JudgeOutput"] = lambda user, t: {
+        "best": 2,
+        "score": 0.1 if "refund window" in user else 0.95,
+        "reason": "Candidate 2 is clearer.",
+    }
+    pid, _ = ingest(client, "qa.csv")
+    seed = client.post(f"/api/projects/{pid}/seeds/select", json={"count": 5}).json()[0]["row"]
+    client.post(f"/api/projects/{pid}/seeds/{seed['id']}", json={"expected_output": "x"})
+
+    res = client.post(f"/api/projects/{pid}/label", json={"best_of": True})
+    assert res.status_code == 202
+    assert run_next()
+    labels = {
+        r["input"]["question"]: r["label"]
+        for r in client.get(f"/api/projects/{pid}/rows").json()["items"]
+        if r["label"] and r["label"]["source"] == "llm"
+    }
+    assert labels and all(lab["expected_output"] == "warm answer" for lab in labels.values())
+    some = next(iter(labels.values()))["uncertainty_breakdown"]
+    assert some["chosen"] == 1 and some["judge"]["reason"]
+    if "What is the refund window?" in labels:
+        low = labels["What is the refund window?"]
+        assert low["uncertainty_breakdown"]["signals"]["judge"] == 0.9
+        assert low["status"] == "needs_review"

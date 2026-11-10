@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { api, type Job, type LabelStats } from '../../api/client'
+import { api, type Job, type LabelStats, type Project } from '../../api/client'
 import Icon from '../../components/Icon'
 import ThresholdPanel from '../../components/ThresholdPanel'
 import { ErrorText, Loading, PageHeader, Progress } from '../../components/ui'
@@ -19,6 +19,12 @@ export default function LabelStep() {
   const queryClient = useQueryClient()
   const [jobId, setJobId] = useState<string | null>(null)
   const [cheap, setCheap] = useState(false)
+  const [bestOf, setBestOf] = useState(false)
+  const project = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => api<Project>(`/projects/${projectId}`),
+  })
+  const textTask = !!project.data && project.data.task_type !== 'classification'
   const stats = useQuery({
     queryKey: ['label-stats', projectId],
     queryFn: () => api<LabelStats>(`/projects/${projectId}/label/stats`),
@@ -37,7 +43,10 @@ export default function LabelStep() {
 
   const start = useMutation({
     mutationFn: () =>
-      api<Job>(`/projects/${projectId}/label`, { method: 'POST', body: JSON.stringify({ cheap }) }),
+      api<Job>(`/projects/${projectId}/label`, {
+        method: 'POST',
+        body: JSON.stringify({ cheap, best_of: textTask && bestOf && !cheap }),
+      }),
     onSuccess: (j) => setJobId(j.id),
   })
 
@@ -81,6 +90,20 @@ export default function LabelStep() {
             />
             Cheap mode: one sample per row, skips the disagreement check
           </label>
+          {textTask && (
+            <label
+              className={`flex items-center gap-2 text-[13px] text-muted ${cheap ? 'opacity-40' : 'cursor-pointer'}`}
+            >
+              <input
+                type="checkbox"
+                className="accent-ink"
+                checked={bestOf && !cheap}
+                disabled={cheap}
+                onChange={(e) => setBestOf(e.target.checked)}
+              />
+              Best of 3: a judge picks the strongest answer (one extra call per row)
+            </label>
+          )}
         </div>
         {running && (
           <div className="mt-5">
