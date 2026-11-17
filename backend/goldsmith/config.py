@@ -29,13 +29,14 @@ class Settings:
     label_samples: int = field(default_factory=lambda: int(_env("LABEL_SAMPLES", "3")))
     label_concurrency: int = field(default_factory=lambda: int(_env("LABEL_CONCURRENCY", "8")))
     # Max push per uncertainty signal (JSON, 0-1). >= the 0.5 threshold means that signal alone
-    # sends a row to review. Stated confidence weighs least: models are poorly calibrated.
+    # sends a row to review. Tuned with goldsmith.bench on TweetEval sentiment (two 300-row
+    # slices): novelty was noise (AUC 0.48), stated confidence the best predictor (AUC 0.61).
     uncertainty_weights: dict[str, float] = field(
         default_factory=lambda: json.loads(
             _env(
                 "UNCERTAINTY_WEIGHTS",
                 '{"reference": 0.8, "disagreement": 0.7, "rule_concerns": 0.6,'
-                ' "novelty": 0.4, "confidence": 0.3, "judge": 0.7}',
+                ' "novelty": 0.1, "confidence": 0.6, "judge": 0.7}',
             )
         )
     )

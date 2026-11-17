@@ -38,6 +38,8 @@ cd backend && uv run --env-file ../.env python -m goldsmith.bench my_labelled.cs
 
 The gold column is hidden from the model. The 10 seeds are labelled from it, and the rest of the file is labelled once. The script then compares three ways of spending the same review budget: Goldsmith's queue (most uncertain rows first), random review, and no review. It prints the accuracy of each as JSON. The run is saved as a project under a `bench@goldsmith.local` user.
 
+On 300 held-out TweetEval sentiment tweets (gpt-4o-mini, 15 seeds, 60-row budget), the default weights catch 21 of 84 model errors, against 17.7 for random review and 16 for the old weights.
+
 ### Google sign-in
 
 Locally, `DEV_AUTH_BYPASS=true` signs you in as a fake dev user. For real Google sign-in, create an OAuth client (type "Web application") in Google Cloud Console, add `http://localhost:5173/api/auth/google/callback` as an authorised redirect URI, put the client ID and secret in `.env`, and set `DEV_AUTH_BYPASS=false`.
